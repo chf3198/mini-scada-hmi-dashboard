@@ -228,6 +228,14 @@ function renderRunbooks() {
 }
 
 function renderCommissioning() {
+    const sectionIcons = {
+        Safety: '🛡️',
+        IO: '🔌',
+        Network: '🌐',
+        Sensors: '📡',
+        Throughput: '📊',
+        Handoff: '🤝'
+    };
     const sectionTooltips = {
         Safety: 'Verify all safety systems including E-stops, guards, and interlocks are functioning properly',
         IO: 'Validate all input/output signals between PLC and field devices are correctly wired and configured',
@@ -236,25 +244,92 @@ function renderCommissioning() {
         Throughput: 'Validate production rate meets design specifications under normal operating conditions',
         Handoff: 'Complete all documentation and training before transferring system to operations team'
     };
+    
+    // Calculate overall progress
+    let totalItems = 0;
+    let checkedItems = 0;
+    Object.values(commissioningChecklist).forEach(items => {
+        totalItems += items.length;
+        checkedItems += items.filter(i => i.checked).length;
+    });
+    const overallProgress = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
+    
     const sections = Object.keys(commissioningChecklist).map(section => {
-        const items = commissioningChecklist[section].map(item => `
-            <div class="flex items-center mb-2">
-                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleChecklist('${section}', '${item.item}')" class="mr-2" data-tippy-content="Check when this item has been verified and documented">
-                <label>${item.item}</label>
-            </div>
+        const sectionItems = commissioningChecklist[section];
+        const sectionChecked = sectionItems.filter(i => i.checked).length;
+        const sectionTotal = sectionItems.length;
+        const sectionProgress = sectionTotal > 0 ? Math.round((sectionChecked / sectionTotal) * 100) : 0;
+        const isComplete = sectionProgress === 100;
+        
+        const items = sectionItems.map(item => `
+            <label class="flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${item.checked ? 'bg-green-50 dark:bg-green-900/20' : ''}">
+                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleChecklist('${section}', '${item.item}')" class="w-5 h-5 mr-3 accent-green-600" data-tippy-content="Check when this item has been verified and documented">
+                <span class="${item.checked ? 'line-through text-gray-400' : ''}">${item.item}</span>
+                ${item.checked ? '<span class="ml-auto text-green-600">✓</span>' : ''}
+            </label>
         `).join('');
+        
         return `
-            <div class="bg-white dark:bg-gray-800 p-4 rounded shadow mb-4" data-tippy-content="${sectionTooltips[section] || 'Commissioning section'}">
-                <h3 class="text-lg font-bold">${section}</h3>
-                ${items}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-4" data-tippy-content="${sectionTooltips[section] || 'Commissioning section'}">
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between ${isComplete ? 'bg-green-50 dark:bg-green-900/30' : ''}">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${sectionIcons[section] || '📋'}</span>
+                        <div>
+                            <h3 class="text-lg font-bold">${section}</h3>
+                            <span class="text-sm text-gray-500">${sectionChecked}/${sectionTotal} complete</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full ${isComplete ? 'bg-green-500' : 'bg-blue-500'} transition-all" style="width: ${sectionProgress}%"></div>
+                        </div>
+                        <span class="text-sm font-bold ${isComplete ? 'text-green-600' : 'text-blue-600'}">${sectionProgress}%</span>
+                    </div>
+                </div>
+                <div class="p-3 space-y-1">
+                    ${items}
+                </div>
             </div>
         `;
     }).join('');
 
     return `
         <h2 class="text-2xl font-bold mb-4" data-tippy-content="Factory Acceptance Test (FAT) and Site Acceptance Test (SAT) checklist - systematic validation before production handoff">Commissioning Checklist</h2>
+        
+        <!-- Overall Progress Card -->
+        <div class="bg-gradient-to-r ${overallProgress === 100 ? 'from-green-500 to-green-600' : 'from-blue-500 to-blue-600'} text-white p-6 rounded-lg shadow-lg mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-medium opacity-90">Overall Progress</h3>
+                    <p class="text-3xl font-bold">${checkedItems} of ${totalItems} items complete</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-5xl font-bold">${overallProgress}%</div>
+                    ${overallProgress === 100 ? '<span class="text-sm">✅ Ready for handoff!</span>' : ''}
+                </div>
+            </div>
+            <div class="mt-4 h-3 bg-white/30 rounded-full overflow-hidden">
+                <div class="h-full bg-white transition-all duration-500" style="width: ${overallProgress}%"></div>
+            </div>
+        </div>
+        
         ${sections}
-        <button onclick="exportChecklist()" class="bg-blue-600 text-white px-4 py-2 rounded" data-tippy-content="Download checklist as JSON file for documentation and audit trail">Export to JSON</button>
+        
+        <!-- Action Buttons -->
+        <div class="flex gap-3 mt-6">
+            <button onclick="exportChecklist()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Download checklist as JSON file for documentation and audit trail">
+                <span>📤</span> Export to JSON
+            </button>
+            <button onclick="document.getElementById('import-file').click()" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Import a previously exported checklist JSON file">
+                <span>📥</span> Import from JSON
+            </button>
+            <input type="file" id="import-file" accept=".json" onchange="importChecklist(event)" class="hidden">
+            <button onclick="resetChecklist()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Reset all checklist items to unchecked - use with caution!">
+                <span>🔄</span> Reset All
+            </button>
+        </div>
+        
+        <div id="import-status" class="mt-4 hidden"></div>
     `;
 }
 

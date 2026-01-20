@@ -33,5 +33,35 @@ if (window.location.search.includes('test=1')) {
     console.assert(helpContent.includes('User Manual'), 'renderHelp should include User Manual title');
     console.assert(helpContent.includes('SCADA'), 'renderHelp should explain SCADA terminology');
 
+    // Test validateChecklistJSON function
+    console.assert(typeof validateChecklistJSON === 'function', 'validateChecklistJSON should be a function');
+    
+    // Test valid structure
+    const validData = {
+        Safety: [{ item: 'Test', checked: true }],
+        IO: [{ item: 'Test', checked: false }],
+        Network: [{ item: 'Test', checked: true }],
+        Sensors: [{ item: 'Test', checked: false }],
+        Throughput: [{ item: 'Test', checked: true }],
+        Handoff: [{ item: 'Test', checked: false }]
+    };
+    const validResult = validateChecklistJSON(validData);
+    console.assert(validResult.valid === true, 'Valid checklist should pass validation');
+    
+    // Test invalid: not an object
+    const invalidNotObject = validateChecklistJSON('string');
+    console.assert(invalidNotObject.valid === false, 'String should fail validation');
+    
+    // Test invalid: missing section
+    const invalidMissing = validateChecklistJSON({ Safety: [] });
+    console.assert(invalidMissing.valid === false, 'Missing sections should fail');
+    
+    // Test invalid: wrong item structure
+    const invalidItem = validateChecklistJSON({
+        Safety: [{ item: 'Test', checked: 'yes' }], // checked should be boolean
+        IO: [], Network: [], Sensors: [], Throughput: [], Handoff: []
+    });
+    console.assert(invalidItem.valid === false, 'Invalid item structure should fail');
+
     console.log('Self-tests completed.');
 }

@@ -160,5 +160,121 @@ function exportChecklist() {
     linkElement.click();
 }
 
+// Validate imported checklist JSON structure
+function validateChecklistJSON(data) {
+    const errors = [];
+    const requiredSections = ['Safety', 'IO', 'Network', 'Sensors', 'Throughput', 'Handoff'];
+    
+    // Check if data is an object
+    if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+        errors.push('Invalid format: expected an object with section keys');
+        return { valid: false, errors };
+    }
+    
+    // Check for required sections
+    for (const section of requiredSections) {
+        if (!(section in data)) {
+            errors.push(`Missing required section: "${section}"`);
+        }
+    }
+    
+    // Validate each section
+    for (const [section, items] of Object.entries(data)) {
+        if (!Array.isArray(items)) {
+            errors.push(`Section "${section}" must be an array`);
+            continue;
+        }
+        
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            if (typeof item !== 'object' || item === null) {
+                errors.push(`Section "${section}" item ${i + 1} must be an object`);
+                continue;
+            }
+            if (typeof item.item !== 'string' || item.item.trim() === '') {
+                errors.push(`Section "${section}" item ${i + 1} missing valid "item" property`);
+            }
+            if (typeof item.checked !== 'boolean') {
+                errors.push(`Section "${section}" item ${i + 1} "checked" must be a boolean`);
+            }
+        }
+    }
+    
+    return { valid: errors.length === 0, errors };
+}
+
+// Import checklist from JSON file
+function importChecklist(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const statusDiv = document.getElementById('import-status');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            const validation = validateChecklistJSON(data);
+            
+            if (!validation.valid) {
+                statusDiv.innerHTML = `
+                    <div class="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 p-4 rounded-lg">
+                        <strong>⚠️ Import Failed - Invalid JSON structure:</strong>
+                        <ul class="list-disc list-inside mt-2">
+                            ${validation.errors.map(err => `<li>${err}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                statusDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Confirm before overwriting
+            if (!confirm('This will replace your current checklist. Continue?')) {
+                event.target.value = '';
+                return;
+            }
+            
+            commissioningChecklist = data;
+            saveChecklistToLocalStorage();
+            renderCurrentView();
+            
+            statusDiv.innerHTML = `
+                <div class="bg-green-100 dark:bg-green-900/50 border border-green-400 text-green-700 dark:text-green-300 p-4 rounded-lg">
+                    <strong>✅ Import Successful!</strong> Checklist has been updated.
+                </div>
+            `;
+            statusDiv.classList.remove('hidden');
+            setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+            
+        } catch (err) {
+            statusDiv.innerHTML = `
+                <div class="bg-red-100 dark:bg-red-900/50 border border-red-400 text-red-700 dark:text-red-300 p-4 rounded-lg">
+                    <strong>⚠️ Import Failed:</strong> ${err.message}. Ensure the file is valid JSON.
+                </div>
+            `;
+            statusDiv.classList.remove('hidden');
+        }
+        
+        event.target.value = ''; // Reset file input
+    };
+    reader.readAsText(file);
+}
+
+// Reset checklist to unchecked state
+function resetChecklist() {
+    if (!confirm('Are you sure you want to reset ALL checklist items to unchecked?')) {
+        return;
+    }
+    
+    for (const section of Object.keys(commissioningChecklist)) {
+        commissioningChecklist[section].forEach(item => {
+            item.checked = false;
+        });
+    }
+    saveChecklistToLocalStorage();
+    renderCurrentView();
+}
+
 // Load checklist on start
 loadChecklistFromLocalStorage();
