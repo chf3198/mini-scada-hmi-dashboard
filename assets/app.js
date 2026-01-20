@@ -3,7 +3,13 @@
 let currentView = 'overview';
 
 function renderCurrentView() {
+    console.log('Rendering view:', currentView);
     const content = document.getElementById('content');
+    console.log('Content element:', content);
+    if (!content) {
+        console.error('Content element not found');
+        return;
+    }
     switch (currentView) {
         case 'overview':
             content.innerHTML = renderOverview();
@@ -20,6 +26,7 @@ function renderCurrentView() {
         default:
             content.innerHTML = renderOverview();
     }
+    console.log('InnerHTML set for view:', currentView);
     // Re-initialize Lucide icons
     lucide.createIcons();
 }
