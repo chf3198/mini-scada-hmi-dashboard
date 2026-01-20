@@ -116,6 +116,7 @@ function startSimulation() {
         lastSimulated = Date.now();
         renderCurrentView();
     }, 2000 + Math.random() * 1000); // 2-3 seconds
+    renderCurrentView();
 }
 
 function animateSimBar() {
@@ -136,6 +137,7 @@ function stopSimulation() {
         simBar.set(0);
         document.getElementById('sim-progress').classList.add('hidden');
     }
+    renderCurrentView();
 }
 
 function runRateTest(machineId) {
