@@ -27,5 +27,11 @@ if (window.location.search.includes('test=1')) {
     console.assert(typeof startSimulation === 'function', 'startSimulation should be a function');
     console.assert(typeof stopSimulation === 'function', 'stopSimulation should be a function');
 
+    // Test renderHelp function exists and returns content
+    console.assert(typeof renderHelp === 'function', 'renderHelp should be a function');
+    const helpContent = renderHelp();
+    console.assert(helpContent.includes('User Manual'), 'renderHelp should include User Manual title');
+    console.assert(helpContent.includes('SCADA'), 'renderHelp should explain SCADA terminology');
+
     console.log('Self-tests completed.');
 }
