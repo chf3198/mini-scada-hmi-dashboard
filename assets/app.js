@@ -41,6 +41,24 @@ function renderCurrentView() {
     if (typeof tippy !== 'undefined') {
         tippy('[data-tippy-content]', { theme: 'light-border', placement: 'bottom', delay: [200, 0] });
     }
+    // Update navigation highlight
+    updateNavHighlight();
+}
+
+// Highlight active navigation link
+function updateNavHighlight() {
+    const navLinks = document.querySelectorAll('[data-route]');
+    const activeRoute = currentView === 'machine' ? 'overview' : currentView; // Machine detail shows Overview as active
+    navLinks.forEach(link => {
+        const route = link.getAttribute('data-route');
+        if (route === activeRoute) {
+            link.classList.add('bg-blue-700', 'font-bold', 'shadow-inner');
+            link.classList.remove('hover:bg-blue-500');
+        } else {
+            link.classList.remove('bg-blue-700', 'font-bold', 'shadow-inner');
+            link.classList.add('hover:bg-blue-500');
+        }
+    });
 }
 
 function renderOverview() {
