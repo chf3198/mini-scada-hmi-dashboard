@@ -23,14 +23,9 @@ if (window.location.search.includes('test=1')) {
     loadChecklistFromLocalStorage();
     console.assert(commissioningChecklist.Safety[0].checked === !originalChecked, 'Checklist persistence failed');
 
-    // Test progress bar creation (if ProgressBar loaded)
-    if (typeof ProgressBar !== 'undefined') {
-        const testBar = new ProgressBar.Circle(document.createElement('div'), { strokeWidth: 2 });
-        console.assert(testBar, 'Progress bar creation failed');
-        testBar.animate(0.5);
-    } else {
-        console.warn('ProgressBar.js not loaded, skipping bar test');
-    }
+    // Test simulation start/stop
+    console.assert(typeof startSimulation === 'function', 'startSimulation should be a function');
+    console.assert(typeof stopSimulation === 'function', 'stopSimulation should be a function');
 
     console.log('Self-tests completed.');
 }

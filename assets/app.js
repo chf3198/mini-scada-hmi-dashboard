@@ -2,7 +2,6 @@
 console.log('App.js loaded at', new Date());
 
 let currentView = 'overview';
-let simBar = null;
 
 function renderCurrentView() {
     console.log('Rendering view:', currentView);
@@ -77,12 +76,12 @@ function renderOverview() {
                 <canvas id="eventsChart"></canvas>
             </div>
         </div>
-        <div class="mt-4">
-            <button onclick="simulationRunning ? stopSimulation() : startSimulation()" class="bg-blue-600 text-white px-4 py-2 rounded">
+        <div class="mt-4 flex items-center gap-4">
+            <button onclick="simulationRunning ? stopSimulation() : startSimulation()" class="bg-blue-600 text-white px-4 py-2 rounded ${simulationRunning ? 'animate-pulse' : ''}">
                 ${simulationRunning ? 'Stop' : 'Start'} Simulation
             </button>
-            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Last simulated: ${formatAgo(lastSimulated)}</p>
-            <div id="sim-progress" class="mt-2 w-8 h-8 mx-auto hidden"></div>
+            ${simulationRunning ? '<div class="flex items-center gap-2"><span class="w-3 h-3 bg-green-500 rounded-full animate-ping"></span><span class="text-green-600 font-medium">Running</span></div>' : ''}
+            <span class="text-sm text-gray-600 dark:text-gray-400">Last simulated: ${formatAgo(lastSimulated)}</span>
         </div>
     `;
 }
