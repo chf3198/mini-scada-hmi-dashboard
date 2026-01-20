@@ -16,8 +16,8 @@ let downtimeEntries = [
 ];
 
 const runbooks = [
-    { code: 'ALRM-001', title: 'Motor Failure Response', steps: ['1. Stop machine', '2. Check power', '3. Inspect motor', '4. Replace if needed'] },
-    { code: 'WARN-002', title: 'Low Throughput Handling', steps: ['1. Check input feed', '2. Adjust settings', '3. Monitor for 10 min'] },
+    { code: 'ALRM-001', title: 'Motor Failure Response', steps: ['Stop machine immediately', 'Check power supply', 'Inspect motor for damage', 'Replace motor if needed'] },
+    { code: 'WARN-002', title: 'Low Throughput Handling', steps: ['Check input feed rate', 'Adjust machine settings', 'Monitor output for 10 minutes'] },
 ];
 
 let commissioningChecklist = {

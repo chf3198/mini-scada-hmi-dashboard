@@ -198,17 +198,32 @@ function renderMachineDetail(machineId) {
 
 function renderRunbooks() {
     const runbookList = runbooks.map(r => `
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow mb-2" data-tippy-content="Standard Operating Procedure for handling specific alarm or fault conditions">
-            <h3 class="text-lg font-bold">${r.code}: ${r.title}</h3>
-            <button onclick="showRunbook('${r.code}')" class="text-blue-600 hover:underline" data-tippy-content="View step-by-step troubleshooting instructions">View Details</button>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 overflow-hidden" data-runbook="${r.code}" data-tippy-content="Standard Operating Procedure for handling specific alarm or fault conditions">
+            <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="showRunbook('${r.code}')">
+                <div>
+                    <span class="inline-block px-2 py-1 text-xs font-mono font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mr-2">${r.code}</span>
+                    <span class="text-lg font-semibold">${r.title}</span>
+                </div>
+                <span class="text-gray-400 text-xl" id="chevron-${r.code}">▶</span>
+            </div>
+            <div id="detail-${r.code}" class="hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-1 bg-blue-500 rounded self-stretch"></div>
+                    <div>
+                        <h4 class="font-bold text-gray-700 dark:text-gray-300 mb-3">📋 Procedure Steps:</h4>
+                        <ol class="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-400">
+                            ${r.steps.map(s => `<li class="pl-2">${s}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+            </div>
         </div>
     `).join('');
 
     return `
         <h2 class="text-2xl font-bold mb-4" data-tippy-content="Runbooks are standardized procedures for responding to alarms and equipment issues - ensures consistent operator response">Runbooks</h2>
-        <input type="text" id="runbook-search" placeholder="Search by code" class="block w-full p-2 border rounded mb-4" oninput="filterRunbooks()" data-tippy-content="Filter runbooks by alarm code (e.g., ALRM-001) for quick access during emergencies">
+        <input type="text" id="runbook-search" placeholder="Search by code (e.g., ALRM-001)" class="block w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg mb-4 focus:border-blue-500 focus:outline-none" oninput="filterRunbooks()" data-tippy-content="Filter runbooks by alarm code for quick access during emergencies">
         <div id="runbook-list">${runbookList}</div>
-        <div id="runbook-detail" class="hidden bg-white dark:bg-gray-800 p-4 rounded shadow mt-4" data-tippy-content="Detailed procedure steps - follow in order for safe troubleshooting"></div>
     `;
 }
 
@@ -410,23 +425,52 @@ function addDowntime(event, machineId) {
 function showRunbook(code) {
     const runbook = runbooks.find(r => r.code === code);
     if (!runbook) return;
-    const detail = document.getElementById('runbook-detail');
-    detail.innerHTML = `
-        <h3 class="text-xl font-bold">${runbook.title}</h3>
-        <ol class="list-decimal list-inside">
-            ${runbook.steps.map(s => `<li>${s}</li>`).join('')}
-        </ol>
-    `;
-    detail.classList.remove('hidden');
+    
+    // Close all other open runbooks
+    runbooks.forEach(r => {
+        if (r.code !== code) {
+            const otherDetail = document.getElementById(`detail-${r.code}`);
+            const otherChevron = document.getElementById(`chevron-${r.code}`);
+            if (otherDetail) otherDetail.classList.add('hidden');
+            if (otherChevron) otherChevron.textContent = '▶';
+        }
+    });
+    
+    // Toggle the clicked runbook
+    const detail = document.getElementById(`detail-${code}`);
+    const chevron = document.getElementById(`chevron-${code}`);
+    if (detail.classList.contains('hidden')) {
+        detail.classList.remove('hidden');
+        chevron.textContent = '▼';
+    } else {
+        detail.classList.add('hidden');
+        chevron.textContent = '▶';
+    }
 }
 
 function filterRunbooks() {
     const query = document.getElementById('runbook-search').value.toLowerCase();
     const list = document.getElementById('runbook-list');
-    list.innerHTML = runbooks.filter(r => r.code.toLowerCase().includes(query)).map(r => `
-        <div class="bg-white dark:bg-gray-800 p-4 rounded shadow mb-2">
-            <h3 class="text-lg font-bold">${r.code}: ${r.title}</h3>
-            <button onclick="showRunbook('${r.code}')" class="text-blue-600 hover:underline">View Details</button>
+    list.innerHTML = runbooks.filter(r => r.code.toLowerCase().includes(query) || r.title.toLowerCase().includes(query)).map(r => `
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 overflow-hidden" data-runbook="${r.code}">
+            <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="showRunbook('${r.code}')">
+                <div>
+                    <span class="inline-block px-2 py-1 text-xs font-mono font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mr-2">${r.code}</span>
+                    <span class="text-lg font-semibold">${r.title}</span>
+                </div>
+                <span class="text-gray-400 text-xl" id="chevron-${r.code}">▶</span>
+            </div>
+            <div id="detail-${r.code}" class="hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-1 bg-blue-500 rounded self-stretch"></div>
+                    <div>
+                        <h4 class="font-bold text-gray-700 dark:text-gray-300 mb-3">📋 Procedure Steps:</h4>
+                        <ol class="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-400">
+                            ${r.steps.map(s => `<li class="pl-2">${s}</li>`).join('')}
+                        </ol>
+                    </div>
+                </div>
+            </div>
         </div>
     `).join('');
 }
