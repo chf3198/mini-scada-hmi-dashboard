@@ -81,11 +81,11 @@ function renderOverview() {
             </div>
         </div>
         <div class="mt-4 flex items-center gap-4">
-            <button onclick="simulationRunning ? stopSimulation() : startSimulation()" class="bg-blue-600 text-white px-4 py-2 rounded ${simulationRunning ? 'animate-pulse' : ''}">
+            <button onclick="simulationRunning ? stopSimulation() : startSimulation()" id="sim-btn" class="bg-blue-600 text-white px-4 py-2 rounded ${simulationRunning ? 'animate-pulse' : ''}">
                 ${simulationRunning ? 'Stop' : 'Start'} Simulation
             </button>
-            ${simulationRunning ? '<div class="flex items-center gap-2"><span class="w-3 h-3 bg-green-500 rounded-full animate-ping"></span><span class="text-green-600 font-medium">Running</span></div>' : ''}
-            <span class="text-sm text-gray-600 dark:text-gray-400">Last simulated: ${formatAgo(lastSimulated)}</span>
+            <span id="sim-status">${simulationRunning ? '<span class="flex items-center gap-2"><span class="w-3 h-3 bg-green-500 rounded-full animate-ping"></span><span class="text-green-600 font-medium">Running...</span></span>' : ''}</span>
+            <span id="sim-ticker" class="text-sm text-gray-600 dark:text-gray-400">Last simulated: ${formatAgo(lastSimulated)}</span>
         </div>
     `;
 }

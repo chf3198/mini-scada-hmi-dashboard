@@ -80,7 +80,11 @@ function addDowntimeEntry(machineId, reason, notes, start, end) {
 function startSimulation() {
     simulationRunning = true;
     lastSimulated = Date.now();
+    // Update UI to show simulation is running
+    renderCurrentView();
+    
     simulationInterval = setInterval(() => {
+        // Update machine data in memory
         machines.forEach(machine => {
             machine.lastHeartbeat = Date.now();
             const rand = Math.random();
@@ -102,9 +106,13 @@ function startSimulation() {
             machine.unitsPerMin = Math.floor(Math.random() * 50) + 10;
         });
         lastSimulated = Date.now();
-        renderCurrentView();
+        
+        // Only update the ticker element, not the full view
+        const ticker = document.getElementById('sim-ticker');
+        if (ticker) {
+            ticker.textContent = 'Last simulated: ' + formatAgo(lastSimulated);
+        }
     }, 2500); // Fixed 2.5 second interval
-    renderCurrentView();
 }
 
 function stopSimulation() {
