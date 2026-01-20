@@ -2,6 +2,7 @@
 console.log('App.js loaded at', new Date());
 
 let currentView = 'overview';
+let simBar = null;
 
 function renderCurrentView() {
     console.log('Rendering view:', currentView);
@@ -81,6 +82,7 @@ function renderOverview() {
                 ${simulationRunning ? 'Stop' : 'Start'} Simulation
             </button>
             <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Last simulated: ${formatAgo(lastSimulated)}</p>
+            <div id="sim-progress" class="mt-2 w-8 h-8 mx-auto hidden"></div>
         </div>
     `;
 }

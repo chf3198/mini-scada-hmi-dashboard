@@ -80,6 +80,18 @@ function addDowntimeEntry(machineId, reason, notes, start, end) {
 function startSimulation() {
     simulationRunning = true;
     lastSimulated = Date.now();
+    if (!simBar) {
+        simBar = new ProgressBar.Circle('#sim-progress', {
+            strokeWidth: 6,
+            color: '#3B82F6',
+            trailColor: '#d1d5db',
+            trailWidth: 2,
+            duration: 3000,
+            easing: 'easeInOut'
+        });
+    }
+    document.getElementById('sim-progress').classList.remove('hidden');
+    animateSimBar();
     simulationInterval = setInterval(() => {
         machines.forEach(machine => {
             machine.lastHeartbeat = Date.now();
@@ -106,9 +118,24 @@ function startSimulation() {
     }, 2000 + Math.random() * 1000); // 2-3 seconds
 }
 
+function animateSimBar() {
+    if (simulationRunning && simBar) {
+        simBar.animate(1, { duration: 3000 }, () => {
+            if (simulationRunning) {
+                simBar.set(0);
+                animateSimBar();
+            }
+        });
+    }
+}
+
 function stopSimulation() {
     simulationRunning = false;
     clearInterval(simulationInterval);
+    if (simBar) {
+        simBar.set(0);
+        document.getElementById('sim-progress').classList.add('hidden');
+    }
 }
 
 function runRateTest(machineId) {
