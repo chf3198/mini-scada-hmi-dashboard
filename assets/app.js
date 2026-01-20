@@ -1,4 +1,5 @@
 // Main app logic
+console.log('App.js loaded at', new Date());
 
 let currentView = 'overview';
 
