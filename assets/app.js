@@ -2,6 +2,8 @@
 console.log('App.js loaded at', new Date());
 
 let currentView = 'overview';
+let downtimeChartInstance = null;
+let eventsChartInstance = null;
 
 function renderCurrentView() {
     console.log('Rendering view:', currentView);
@@ -14,6 +16,7 @@ function renderCurrentView() {
     switch (currentView) {
         case 'overview':
             content.innerHTML = renderOverview();
+            setTimeout(renderCharts, 50);
             break;
         case 'machine':
             content.innerHTML = renderMachineDetail(window.location.hash.split('/')[2]);
@@ -26,6 +29,7 @@ function renderCurrentView() {
             break;
         default:
             content.innerHTML = renderOverview();
+            setTimeout(renderCharts, 50);
     }
     console.log('InnerHTML set for view:', currentView);
     // Re-initialize Lucide icons
@@ -275,21 +279,24 @@ window.addEventListener('hashchange', () => {
 // Initial render
 renderCurrentView();
 
-// Charts after render
-setTimeout(() => {
-    if (currentView === 'overview') {
-        renderCharts();
-    }
-}, 100);
-
 function renderCharts() {
+    // Destroy existing charts to prevent duplicates
+    if (downtimeChartInstance) {
+        downtimeChartInstance.destroy();
+    }
+    if (eventsChartInstance) {
+        eventsChartInstance.destroy();
+    }
+
     // Downtime chart
-    const downtimeCtx = document.getElementById('downtimeChart').getContext('2d');
+    const downtimeCanvas = document.getElementById('downtimeChart');
+    if (!downtimeCanvas) return;
+    const downtimeCtx = downtimeCanvas.getContext('2d');
     const downtimeData = machines.map(m => {
         const total = downtimeEntries.filter(d => d.machineId === m.id).reduce((sum, d) => sum + (d.end - d.start) / 60000, 0);
         return total;
     });
-    new Chart(downtimeCtx, {
+    downtimeChartInstance = new Chart(downtimeCtx, {
         type: 'bar',
         data: {
             labels: machines.map(m => m.name),
@@ -304,10 +311,12 @@ function renderCharts() {
     });
 
     // Events chart
-    const eventsCtx = document.getElementById('eventsChart').getContext('2d');
+    const eventsCanvas = document.getElementById('eventsChart');
+    if (!eventsCanvas) return;
+    const eventsCtx = eventsCanvas.getContext('2d');
     const severityCounts = { INFO: 0, WARN: 0, ALARM: 0 };
     events.forEach(e => severityCounts[e.severity]++);
-    new Chart(eventsCtx, {
+    eventsChartInstance = new Chart(eventsCtx, {
         type: 'pie',
         data: {
             labels: Object.keys(severityCounts),
