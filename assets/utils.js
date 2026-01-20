@@ -4,6 +4,12 @@ function formatTime(timestamp) {
     return new Date(timestamp).toLocaleString();
 }
 
+function formatAgo(timestamp) {
+    if (!timestamp) return 'Never';
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    return seconds + 's ago';
+}
+
 function getSeverityColor(severity) {
     switch (severity) {
         case 'INFO': return 'text-blue-600';
@@ -73,6 +79,7 @@ function addDowntimeEntry(machineId, reason, notes, start, end) {
 
 function startSimulation() {
     simulationRunning = true;
+    lastSimulated = Date.now();
     simulationInterval = setInterval(() => {
         machines.forEach(machine => {
             machine.lastHeartbeat = Date.now();
@@ -94,6 +101,7 @@ function startSimulation() {
             // Simulate units/min
             machine.unitsPerMin = Math.floor(Math.random() * 50) + 10;
         });
+        lastSimulated = Date.now();
         renderCurrentView();
     }, 2000 + Math.random() * 1000); // 2-3 seconds
 }

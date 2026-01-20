@@ -72,6 +72,7 @@ function renderOverview() {
             <button onclick="simulationRunning ? stopSimulation() : startSimulation()" class="bg-blue-600 text-white px-4 py-2 rounded">
                 ${simulationRunning ? 'Stop' : 'Start'} Simulation
             </button>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Last simulated: ${formatAgo(lastSimulated)}</p>
         </div>
     `;
 }
