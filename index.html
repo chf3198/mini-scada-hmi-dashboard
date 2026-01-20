@@ -10,6 +10,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Tippy.js CDN for tooltips -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <link rel="stylesheet" href="https://unpkg.com/tippy.js@6/themes/light-border.css">
     <!-- Alpine.js CDN for lightweight reactivity -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <!-- Custom styles if needed -->
@@ -22,10 +26,10 @@
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-xl font-bold">Mini SCADA HMI</h1>
                 <div class="flex space-x-4">
-                    <a href="#/overview" class="hover:underline">Overview</a>
-                    <a href="#/runbooks" class="hover:underline">Runbooks</a>
-                    <a href="#/commissioning" class="hover:underline">Commissioning</a>
-                    <button id="dark-mode-toggle" class="ml-4">🌙</button>
+                    <a href="#/overview" class="hover:underline" data-tippy-content="Main dashboard showing all machines, alarms, and key performance metrics at a glance">Overview</a>
+                    <a href="#/runbooks" class="hover:underline" data-tippy-content="Standard Operating Procedures (SOPs) for responding to alarms and troubleshooting equipment issues">Runbooks</a>
+                    <a href="#/commissioning" class="hover:underline" data-tippy-content="Factory Acceptance Test (FAT) and Site Acceptance Test (SAT) checklists for equipment validation">Commissioning</a>
+                    <button id="dark-mode-toggle" class="ml-4" data-tippy-content="Toggle dark mode for reduced eye strain during night shifts">🌙</button>
                 </div>
             </div>
         </nav>
@@ -39,5 +43,17 @@
     <script src="assets/utils.js"></script>
     <script src="assets/app.js"></script>
     <script src="assets/tests.js"></script>
+    <script>
+        // Initialize tooltips with Tippy.js
+        function initTooltips() {
+            tippy('[data-tippy-content]', {
+                theme: 'light-border',
+                placement: 'bottom',
+                delay: [200, 0],
+                animation: 'fade'
+            });
+        }
+        document.addEventListener('DOMContentLoaded', initTooltips);
+    </script>
 </body>
 </html>
