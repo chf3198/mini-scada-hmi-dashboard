@@ -231,6 +231,77 @@ function collapseAllSections() {
 }
 
 // ============================================================================
+// HELP SECTION HANDLERS (Accordion Pattern)
+// ============================================================================
+
+/**
+ * Toggles a help section's expanded/collapsed state.
+ * Implements accordion behavior - only one section open at a time.
+ * @param {string} sectionId - The section ID to toggle
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function toggleHelpSection(sectionId) {
+    // Close all other sections (accordion behavior)
+    HELP_SECTIONS.forEach(section => {
+        if (section.id !== sectionId) {
+            const otherDetail = document.getElementById(`detail-help-${section.id}`);
+            const otherChevron = document.getElementById(`chevron-help-${section.id}`);
+            if (otherDetail) otherDetail.classList.add('hidden');
+            if (otherChevron) otherChevron.textContent = '▶';
+        }
+    });
+    
+    // Toggle the clicked section
+    const detailElement = document.getElementById(`detail-help-${sectionId}`);
+    const chevronElement = document.getElementById(`chevron-help-${sectionId}`);
+    
+    if (!detailElement || !chevronElement) {
+        console.error(`Help section elements not found for: ${sectionId}`);
+        return;
+    }
+    
+    const currentlyExpanded = !detailElement.classList.contains('hidden');
+    const newState = getSectionVisibilityState(getNextExpandedState(currentlyExpanded));
+    
+    if (newState.detailHidden) {
+        detailElement.classList.add('hidden');
+    } else {
+        detailElement.classList.remove('hidden');
+    }
+    chevronElement.textContent = newState.chevronText;
+}
+
+/**
+ * Expands all help sections.
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function expandAllHelpSections() {
+    const expandedState = getSectionVisibilityState(true);
+    
+    HELP_SECTIONS.forEach(section => {
+        const detailElement = document.getElementById(`detail-help-${section.id}`);
+        const chevronElement = document.getElementById(`chevron-help-${section.id}`);
+        if (detailElement) detailElement.classList.remove('hidden');
+        if (chevronElement) chevronElement.textContent = expandedState.chevronText;
+    });
+}
+
+/**
+ * Collapses all help sections.
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function collapseAllHelpSections() {
+    const collapsedState = getSectionVisibilityState(false);
+    
+    HELP_SECTIONS.forEach(section => {
+        const detailElement = document.getElementById(`detail-help-${section.id}`);
+        const chevronElement = document.getElementById(`chevron-help-${section.id}`);
+        if (detailElement) detailElement.classList.add('hidden');
+        if (chevronElement) chevronElement.textContent = collapsedState.chevronText;
+    });
+}
+
+// ============================================================================
 // RUNBOOK HANDLERS
 // ============================================================================
 

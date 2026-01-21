@@ -391,11 +391,8 @@ if (window.location.search.includes('test=1')) {
     assert(metricHtml.includes('Test Metric'), 'templateMetricCard includes title');
     assert(metricHtml.includes('42'), 'templateMetricCard includes value');
     
-    // Test templateHelpPage
+    // Test templateHelpPage basic existence (detailed tests below)
     assert(typeof templateHelpPage === 'function', 'templateHelpPage function exists');
-    const helpPageHtml = templateHelpPage();
-    assert(helpPageHtml.includes('Pro Tips'), 'templateHelpPage includes Pro Tips section');
-    assert(helpPageHtml.includes('Glossary'), 'templateHelpPage includes Glossary section');
 
     // ========================================================================
     // Validation Tests
@@ -610,6 +607,67 @@ if (window.location.search.includes('test=1')) {
     assert(actionsHtml.includes('collapseAllSections'), 'Actions include Collapse All button');
     assert(actionsHtml.includes('Expand All'), 'Expand All button has correct text');
     assert(actionsHtml.includes('Collapse All'), 'Collapse All button has correct text');
+
+    // ========================================================================
+    // Help Page Collapsible Sections Tests
+    // ========================================================================
+    console.log('\n📖 Testing Help Page Collapsible Sections...');
+    
+    // Test HELP_SECTIONS constant
+    assert(typeof HELP_SECTIONS === 'object', 'HELP_SECTIONS constant exists');
+    assert(Array.isArray(HELP_SECTIONS), 'HELP_SECTIONS is an array');
+    assert(HELP_SECTIONS.length === 9, 'HELP_SECTIONS has 9 sections');
+    assert(Object.isFrozen(HELP_SECTIONS), 'HELP_SECTIONS is frozen (immutable)');
+    
+    // Test section structure
+    const firstSection = HELP_SECTIONS[0];
+    assert(firstSection.id === 'scada-hmi', 'First section has correct id');
+    assert(typeof firstSection.title === 'string', 'Section has title');
+    assert(typeof firstSection.icon === 'string', 'Section has icon');
+    assert(typeof firstSection.colorClass === 'string', 'Section has colorClass');
+    assert(typeof firstSection.content === 'string', 'Section has content');
+    
+    // Test Pro Tips section has gradient flag
+    const tipsSection = HELP_SECTIONS.find(s => s.id === 'tips');
+    assert(tipsSection !== undefined, 'Tips section exists');
+    assert(tipsSection.isGradient === true, 'Tips section has isGradient flag');
+    
+    // Test templateHelpSectionCollapsible
+    assert(typeof templateHelpSectionCollapsible === 'function', 'templateHelpSectionCollapsible function exists');
+    
+    const testHelpSection = { id: 'test', title: 'Test', icon: '🧪', colorClass: 'text-blue-600', content: '<p>Test</p>' };
+    const collapsedHelpSection = templateHelpSectionCollapsible(testHelpSection, false);
+    assert(collapsedHelpSection.includes('data-help-section="test"'), 'Help section has data attribute');
+    assert(collapsedHelpSection.includes('toggleHelpSection'), 'Help section has toggle onclick');
+    assert(collapsedHelpSection.includes('chevron-help-test'), 'Help section has chevron ID');
+    assert(collapsedHelpSection.includes('detail-help-test'), 'Help section has detail ID');
+    assert(collapsedHelpSection.includes('hidden'), 'Collapsed help section has hidden class');
+    assert(collapsedHelpSection.includes('▶'), 'Collapsed help section has right chevron');
+    
+    const expandedHelpSection = templateHelpSectionCollapsible(testHelpSection, true);
+    assert(!expandedHelpSection.includes('class="hidden'), 'Expanded help section not hidden');
+    assert(expandedHelpSection.includes('▼'), 'Expanded help section has down chevron');
+    
+    // Test gradient section rendering
+    const gradientSection = { id: 'grad', title: 'Grad', icon: '✨', colorClass: 'text-white', content: '<p>G</p>', isGradient: true };
+    const gradientHtml = templateHelpSectionCollapsible(gradientSection, false);
+    assert(gradientHtml.includes('bg-gradient-to-r'), 'Gradient section has gradient class');
+    assert(gradientHtml.includes('from-blue-500'), 'Gradient section has from color');
+    assert(gradientHtml.includes('to-purple-600'), 'Gradient section has to color');
+    
+    // Test templateHelpActions
+    assert(typeof templateHelpActions === 'function', 'templateHelpActions function exists');
+    const helpActionsHtml = templateHelpActions();
+    assert(helpActionsHtml.includes('expandAllHelpSections'), 'Help actions include Expand All');
+    assert(helpActionsHtml.includes('collapseAllHelpSections'), 'Help actions include Collapse All');
+    
+    // Test templateHelpPage renders all sections
+    assert(typeof templateHelpPage === 'function', 'templateHelpPage function exists');
+    const helpPageHtml = templateHelpPage();
+    assert(helpPageHtml.includes('User Manual'), 'Help page has title');
+    assert(helpPageHtml.includes('data-help-section="scada-hmi"'), 'Help page includes SCADA section');
+    assert(helpPageHtml.includes('data-help-section="glossary"'), 'Help page includes Glossary section');
+    assert(helpPageHtml.includes('data-help-section="tips"'), 'Help page includes Tips section');
 
     // ========================================================================
     // Test Summary

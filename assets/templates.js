@@ -282,179 +282,253 @@ const successMetricCard = curriedMetricCard('text-green-600');
 const infoMetricCard = curriedMetricCard('text-blue-600');
 
 // ============================================================================
-// HELP PAGE SECTIONS
+// HELP PAGE SECTIONS (Collapsible Accordion Pattern)
 // ============================================================================
 
 /**
- * Renders a help section card.
- * @param {string} title - Section title
- * @param {string} colorClass - Title color class
- * @param {string} icon - Emoji icon
- * @param {string} content - HTML content for the section
+ * Help section configuration for accordion rendering.
+ * @constant {Object[]}
+ */
+const HELP_SECTIONS = Object.freeze([
+    {
+        id: 'scada-hmi',
+        title: 'What is SCADA & HMI?',
+        icon: '🏭',
+        colorClass: 'text-blue-600',
+        content: `
+            <p class="mb-3"><strong>SCADA</strong> (Supervisory Control and Data Acquisition) is a system used to monitor and control industrial equipment like machines, pumps, and sensors from a central location.</p>
+            <p class="mb-3"><strong>HMI</strong> (Human-Machine Interface) is the visual dashboard that operators use to interact with SCADA systems—this application is an example of an HMI.</p>
+            <p class="text-sm text-gray-500">Think of it like a car dashboard: you can see your speed (monitoring) and control the AC (control) from one place.</p>
+        `
+    },
+    {
+        id: 'overview',
+        title: 'Overview Dashboard',
+        icon: '📊',
+        colorClass: 'text-green-600',
+        content: `
+            <p class="mb-3">The main screen shows the health of your entire operation at a glance.</p>
+            <ul class="list-disc list-inside space-y-2 ml-4">
+                <li><strong>Alarms last 24h:</strong> Critical issues requiring attention. Red = urgent.</li>
+                <li><strong>Machines down:</strong> Equipment currently not producing.</li>
+                <li><strong>Downtime minutes:</strong> Total lost production time today.</li>
+            </ul>
+            <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded">
+                <strong>Machine Status Colors:</strong>
+                <div class="flex gap-4 mt-2 flex-wrap">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded-full"></span> RUN = Producing</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-yellow-500 rounded-full"></span> IDLE = Standby</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded-full"></span> DOWN = Stopped/Faulted</span>
+                </div>
+            </div>
+        `
+    },
+    {
+        id: 'machine-details',
+        title: 'Machine Details',
+        icon: '🔧',
+        colorClass: 'text-purple-600',
+        content: `
+            <p class="mb-3">Click "Details" on any machine card to see in-depth information.</p>
+            <ul class="list-disc list-inside space-y-2 ml-4">
+                <li><strong>Health Score:</strong> Overall equipment effectiveness (0-100%). Higher is better.</li>
+                <li><strong>Last Heartbeat:</strong> Time since the machine last sent data. If too old, check connectivity.</li>
+                <li><strong>Units/min:</strong> Current production rate.</li>
+                <li><strong>Event Log:</strong> History of everything that happened—alarms, status changes, operator actions.</li>
+            </ul>
+            <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900 rounded">
+                <strong>Workflow: Acknowledging Alarms</strong>
+                <ol class="list-decimal list-inside mt-2 space-y-1">
+                    <li>See an unacknowledged alarm in the Event Log</li>
+                    <li>Click "Ack" to acknowledge you've seen it</li>
+                    <li>This logs who saw the alarm and when</li>
+                    <li>Investigate and resolve the underlying issue</li>
+                </ol>
+            </div>
+        `
+    },
+    {
+        id: 'downtime',
+        title: 'Downtime Tracking',
+        icon: '⏱️',
+        colorClass: 'text-orange-600',
+        content: `
+            <p class="mb-3">Recording why machines stop helps identify improvement opportunities.</p>
+            <div class="mt-4 p-3 bg-orange-50 dark:bg-orange-900 rounded">
+                <strong>Workflow: Logging Downtime</strong>
+                <ol class="list-decimal list-inside mt-2 space-y-1">
+                    <li>Go to Machine Details page</li>
+                    <li>Fill in the "Create Downtime Entry" form</li>
+                    <li>Select reason: Maintenance, Failure, or Setup</li>
+                    <li>Add notes explaining what happened</li>
+                    <li>Enter start and end times</li>
+                    <li>Click "Add" to log the entry</li>
+                </ol>
+            </div>
+            <p class="mt-3 text-sm text-gray-500">This data feeds into reports showing which machines have the most problems.</p>
+        `
+    },
+    {
+        id: 'runbooks',
+        title: 'Runbooks',
+        icon: '📋',
+        colorClass: 'text-red-600',
+        content: `
+            <p class="mb-3">Runbooks are step-by-step guides for handling specific problems. They ensure every operator responds consistently.</p>
+            <div class="mt-4 p-3 bg-red-50 dark:bg-red-900 rounded">
+                <strong>Workflow: Using a Runbook</strong>
+                <ol class="list-decimal list-inside mt-2 space-y-1">
+                    <li>When you see an alarm, note the alarm code (e.g., ALRM-001)</li>
+                    <li>Go to the Runbooks page</li>
+                    <li>Search for the code in the search box</li>
+                    <li>Click the runbook header to expand it</li>
+                    <li>Follow each step in order</li>
+                    <li>Document any issues in the machine's downtime notes</li>
+                </ol>
+            </div>
+        `
+    },
+    {
+        id: 'commissioning',
+        title: 'Commissioning Checklist',
+        icon: '✅',
+        colorClass: 'text-teal-600',
+        content: `
+            <p class="mb-3">Used when setting up new equipment or validating existing systems. Ensures nothing is missed.</p>
+            <ul class="list-disc list-inside space-y-2 ml-4">
+                <li><strong>Safety:</strong> Emergency stops, guards, and interlocks</li>
+                <li><strong>IO:</strong> Inputs/outputs correctly wired and responding</li>
+                <li><strong>Network:</strong> All devices communicating properly</li>
+                <li><strong>Sensors:</strong> Calibrated and accurate</li>
+                <li><strong>Throughput:</strong> Meeting production targets</li>
+                <li><strong>Handoff:</strong> Documentation and training complete</li>
+            </ul>
+            <p class="mt-3 text-sm text-gray-500">Checklist state is saved automatically. Click "Export to JSON" to download for records.</p>
+        `
+    },
+    {
+        id: 'simulation',
+        title: 'Simulation Mode',
+        icon: '🎮',
+        colorClass: 'text-indigo-600',
+        content: `
+            <p class="mb-3">This demo includes a simulation to show how the dashboard behaves with live data.</p>
+            <div class="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900 rounded">
+                <strong>How to Use:</strong>
+                <ol class="list-decimal list-inside mt-2 space-y-1">
+                    <li>Click "Start Simulation" on the Overview page</li>
+                    <li>Watch the ticker update every 2-3 seconds</li>
+                    <li>Data accumulates in the background (status changes, events)</li>
+                    <li>Click "Stop Simulation" to see final results</li>
+                    <li>All metrics, charts, and machine cards update with simulated data</li>
+                </ol>
+            </div>
+            <p class="mt-3 text-sm text-gray-500">In a real factory, this data would come from PLCs via OPC-UA or MQTT protocols.</p>
+        `
+    },
+    {
+        id: 'glossary',
+        title: 'Key Terms Glossary',
+        icon: '📚',
+        colorClass: 'text-gray-600',
+        content: `
+            <dl class="space-y-3">
+                <div><dt class="font-bold">PLC (Programmable Logic Controller)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">The computer that controls individual machines</dd></div>
+                <div><dt class="font-bold">OEE (Overall Equipment Effectiveness)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">A percentage measuring how well equipment is performing (availability × performance × quality)</dd></div>
+                <div><dt class="font-bold">Heartbeat</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">A regular signal from equipment confirming it's connected and working</dd></div>
+                <div><dt class="font-bold">FAT (Factory Acceptance Test)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">Testing done at the equipment manufacturer before shipping</dd></div>
+                <div><dt class="font-bold">SAT (Site Acceptance Test)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">Testing done at your facility after installation</dd></div>
+                <div><dt class="font-bold">Historian</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">Database that stores historical process data for analysis and compliance</dd></div>
+            </dl>
+        `
+    },
+    {
+        id: 'tips',
+        title: 'Pro Tips',
+        icon: '💡',
+        colorClass: 'text-white',
+        isGradient: true,
+        content: `
+            <ul class="list-disc list-inside space-y-2">
+                <li>Hover over any element to see a tooltip explaining what it does</li>
+                <li>Use Dark Mode (🌙 button) for night shift work</li>
+                <li>Check the Event Log regularly for unacknowledged alarms</li>
+                <li>Export your Commissioning Checklist before handoff meetings</li>
+                <li>Use Runbooks before troubleshooting—don't reinvent the wheel!</li>
+            </ul>
+        `
+    }
+]);
+
+/**
+ * Renders a collapsible help section card.
+ * @param {Object} section - Section configuration object
+ * @param {boolean} expanded - Whether section is expanded (default: false)
  * @returns {string} HTML string for help section
  * @pure
  */
-function templateHelpSection(title, colorClass, icon, content) {
+function templateHelpSectionCollapsible(section, expanded = false) {
+    const chevronIcon = expanded ? '▼' : '▶';
+    const hiddenClass = expanded ? '' : 'hidden';
+    const gradientClass = section.isGradient 
+        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
+        : 'bg-white dark:bg-gray-800';
+    const hoverClass = section.isGradient
+        ? 'hover:from-blue-600 hover:to-purple-700'
+        : 'hover:bg-gray-50 dark:hover:bg-gray-700';
+    
     return `
-        <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-            <h3 class="text-xl font-bold mb-3 ${colorClass}">${icon} ${title}</h3>
-            ${content}
+        <div class="${gradientClass} rounded-lg shadow-md overflow-hidden mb-3" data-help-section="${section.id}">
+            <div class="p-4 flex items-center justify-between cursor-pointer ${hoverClass} transition-colors" onclick="toggleHelpSection('${section.id}')">
+                <div class="flex items-center gap-3">
+                    <span class="text-2xl">${section.icon}</span>
+                    <h3 class="text-lg font-bold ${section.colorClass}">${section.title}</h3>
+                </div>
+                <span class="${section.isGradient ? 'text-white/70' : 'text-gray-400'} text-xl transition-transform" id="chevron-help-${section.id}">${chevronIcon}</span>
+            </div>
+            <div id="detail-help-${section.id}" class="${hiddenClass} border-t ${section.isGradient ? 'border-white/20' : 'border-gray-200 dark:border-gray-700'} p-4">
+                ${section.content}
+            </div>
         </div>
     `;
 }
 
 /**
- * Returns the complete Help/User Manual page content.
- * This is a static template with no dynamic data.
+ * Renders help page action buttons (expand/collapse all).
+ * @returns {string} HTML string for action buttons
+ * @pure
+ */
+function templateHelpActions() {
+    return `
+        <div class="flex flex-wrap gap-3 mb-6">
+            <button onclick="expandAllHelpSections()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Expand all sections to view full manual">
+                <span>⬇️</span> Expand All
+            </button>
+            <button onclick="collapseAllHelpSections()" class="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Collapse all sections for quick navigation">
+                <span>⬆️</span> Collapse All
+            </button>
+        </div>
+    `;
+}
+
+/**
+ * Returns the complete Help/User Manual page content with collapsible sections.
+ * Progressive disclosure pattern for improved UX.
  * @returns {string} HTML string for the help page
  * @pure
  */
 function templateHelpPage() {
+    const sectionsHtml = HELP_SECTIONS
+        .map(section => templateHelpSectionCollapsible(section, false))
+        .join('');
+    
     return `
         <div class="max-w-4xl mx-auto">
-            <h2 class="text-3xl font-bold mb-6">📖 User Manual</h2>
-            <p class="text-gray-600 dark:text-gray-400 mb-8">Welcome to the Mini SCADA HMI Dashboard! This guide will help you understand how to use this application effectively, even if you're new to industrial automation terminology.</p>
-
-            <div class="space-y-6">
-                <!-- What is SCADA/HMI -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-blue-600">🏭 What is SCADA & HMI?</h3>
-                    <p class="mb-3"><strong>SCADA</strong> (Supervisory Control and Data Acquisition) is a system used to monitor and control industrial equipment like machines, pumps, and sensors from a central location.</p>
-                    <p class="mb-3"><strong>HMI</strong> (Human-Machine Interface) is the visual dashboard that operators use to interact with SCADA systems—this application is an example of an HMI.</p>
-                    <p class="text-sm text-gray-500">Think of it like a car dashboard: you can see your speed (monitoring) and control the AC (control) from one place.</p>
-                </div>
-
-                <!-- Overview Dashboard -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-green-600">📊 Overview Dashboard</h3>
-                    <p class="mb-3">The main screen shows the health of your entire operation at a glance.</p>
-                    <ul class="list-disc list-inside space-y-2 ml-4">
-                        <li><strong>Alarms last 24h:</strong> Critical issues requiring attention. Red = urgent.</li>
-                        <li><strong>Machines down:</strong> Equipment currently not producing.</li>
-                        <li><strong>Downtime minutes:</strong> Total lost production time today.</li>
-                    </ul>
-                    <div class="mt-4 p-3 bg-blue-50 dark:bg-blue-900 rounded">
-                        <strong>Machine Status Colors:</strong>
-                        <div class="flex gap-4 mt-2">
-                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-green-500 rounded-full"></span> RUN = Producing</span>
-                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-yellow-500 rounded-full"></span> IDLE = Standby</span>
-                            <span class="flex items-center gap-1"><span class="w-3 h-3 bg-red-500 rounded-full"></span> DOWN = Stopped/Faulted</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Machine Details -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-purple-600">🔧 Machine Details</h3>
-                    <p class="mb-3">Click "Details" on any machine card to see in-depth information.</p>
-                    <ul class="list-disc list-inside space-y-2 ml-4">
-                        <li><strong>Health Score:</strong> Overall equipment effectiveness (0-100%). Higher is better.</li>
-                        <li><strong>Last Heartbeat:</strong> Time since the machine last sent data. If too old, check connectivity.</li>
-                        <li><strong>Units/min:</strong> Current production rate.</li>
-                        <li><strong>Event Log:</strong> History of everything that happened—alarms, status changes, operator actions.</li>
-                    </ul>
-                    <div class="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900 rounded">
-                        <strong>Workflow: Acknowledging Alarms</strong>
-                        <ol class="list-decimal list-inside mt-2 space-y-1">
-                            <li>See an unacknowledged alarm in the Event Log</li>
-                            <li>Click "Ack" to acknowledge you've seen it</li>
-                            <li>This logs who saw the alarm and when</li>
-                            <li>Investigate and resolve the underlying issue</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <!-- Downtime Tracking -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-orange-600">⏱️ Downtime Tracking</h3>
-                    <p class="mb-3">Recording why machines stop helps identify improvement opportunities.</p>
-                    <div class="mt-4 p-3 bg-orange-50 dark:bg-orange-900 rounded">
-                        <strong>Workflow: Logging Downtime</strong>
-                        <ol class="list-decimal list-inside mt-2 space-y-1">
-                            <li>Go to Machine Details page</li>
-                            <li>Fill in the "Create Downtime Entry" form</li>
-                            <li>Select reason: Maintenance, Failure, or Setup</li>
-                            <li>Add notes explaining what happened</li>
-                            <li>Enter start and end times</li>
-                            <li>Click "Add" to log the entry</li>
-                        </ol>
-                    </div>
-                    <p class="mt-3 text-sm text-gray-500">This data feeds into reports showing which machines have the most problems.</p>
-                </div>
-
-                <!-- Runbooks -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-red-600">📋 Runbooks</h3>
-                    <p class="mb-3">Runbooks are step-by-step guides for handling specific problems. They ensure every operator responds consistently.</p>
-                    <div class="mt-4 p-3 bg-red-50 dark:bg-red-900 rounded">
-                        <strong>Workflow: Using a Runbook</strong>
-                        <ol class="list-decimal list-inside mt-2 space-y-1">
-                            <li>When you see an alarm, note the alarm code (e.g., ALRM-001)</li>
-                            <li>Go to the Runbooks page</li>
-                            <li>Search for the code in the search box</li>
-                            <li>Click "View Details" to see the procedure</li>
-                            <li>Follow each step in order</li>
-                            <li>Document any issues in the machine's downtime notes</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <!-- Commissioning -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-teal-600">✅ Commissioning Checklist</h3>
-                    <p class="mb-3">Used when setting up new equipment or validating existing systems. Ensures nothing is missed.</p>
-                    <ul class="list-disc list-inside space-y-2 ml-4">
-                        <li><strong>Safety:</strong> Emergency stops, guards, and interlocks</li>
-                        <li><strong>IO:</strong> Inputs/outputs correctly wired and responding</li>
-                        <li><strong>Network:</strong> All devices communicating properly</li>
-                        <li><strong>Sensors:</strong> Calibrated and accurate</li>
-                        <li><strong>Throughput:</strong> Meeting production targets</li>
-                        <li><strong>Handoff:</strong> Documentation and training complete</li>
-                    </ul>
-                    <p class="mt-3 text-sm text-gray-500">Checklist state is saved automatically. Click "Export to JSON" to download for records.</p>
-                </div>
-
-                <!-- Simulation -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-indigo-600">🎮 Simulation Mode</h3>
-                    <p class="mb-3">This demo includes a simulation to show how the dashboard behaves with live data.</p>
-                    <div class="mt-4 p-3 bg-indigo-50 dark:bg-indigo-900 rounded">
-                        <strong>How to Use:</strong>
-                        <ol class="list-decimal list-inside mt-2 space-y-1">
-                            <li>Click "Start Simulation" on the Overview page</li>
-                            <li>Watch the ticker update every 2-3 seconds</li>
-                            <li>Data accumulates in the background (status changes, events)</li>
-                            <li>Click "Stop Simulation" to see final results</li>
-                            <li>All metrics, charts, and machine cards update with simulated data</li>
-                        </ol>
-                    </div>
-                    <p class="mt-3 text-sm text-gray-500">In a real factory, this data would come from PLCs via OPC-UA or MQTT protocols.</p>
-                </div>
-
-                <!-- Key Terms -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3 text-gray-600">📚 Key Terms Glossary</h3>
-                    <dl class="space-y-3">
-                        <div><dt class="font-bold">PLC (Programmable Logic Controller)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">The computer that controls individual machines</dd></div>
-                        <div><dt class="font-bold">OEE (Overall Equipment Effectiveness)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">A percentage measuring how well equipment is performing (availability × performance × quality)</dd></div>
-                        <div><dt class="font-bold">Heartbeat</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">A regular signal from equipment confirming it's connected and working</dd></div>
-                        <div><dt class="font-bold">FAT (Factory Acceptance Test)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">Testing done at the equipment manufacturer before shipping</dd></div>
-                        <div><dt class="font-bold">SAT (Site Acceptance Test)</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">Testing done at your facility after installation</dd></div>
-                        <div><dt class="font-bold">Historian</dt><dd class="ml-4 text-gray-600 dark:text-gray-400">Database that stores historical process data for analysis and compliance</dd></div>
-                    </dl>
-                </div>
-
-                <!-- Tips -->
-                <div class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-lg shadow">
-                    <h3 class="text-xl font-bold mb-3">💡 Pro Tips</h3>
-                    <ul class="list-disc list-inside space-y-2">
-                        <li>Hover over any element to see a tooltip explaining what it does</li>
-                        <li>Use Dark Mode (🌙 button) for night shift work</li>
-                        <li>Check the Event Log regularly for unacknowledged alarms</li>
-                        <li>Export your Commissioning Checklist before handoff meetings</li>
-                        <li>Use Runbooks before troubleshooting—don't reinvent the wheel!</li>
-                    </ul>
-                </div>
+            <h2 class="text-3xl font-bold mb-4">📖 User Manual</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-6">Welcome to the Mini SCADA HMI Dashboard! Click any section below to learn more.</p>
+            ${templateHelpActions()}
+            <div class="space-y-0">
+                ${sectionsHtml}
             </div>
         </div>
     `;
