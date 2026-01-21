@@ -370,10 +370,10 @@ function startSimulation() {
         
         lastSimulated = currentTime;
         
-        // Only update the ticker element, not the full view
+        // Update the ticker element in the toolbar
         const ticker = document.getElementById('sim-ticker');
         if (ticker) {
-            ticker.textContent = 'Last simulated: ' + formatAgo(lastSimulated);
+            ticker.textContent = 'Last: ' + formatAgo(lastSimulated);
         }
     }, SIMULATION.INTERVAL_MS);
 }

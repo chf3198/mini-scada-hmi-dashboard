@@ -102,11 +102,18 @@ function templateActionButton(action) {
 /**
  * Renders the complete action toolbar for a view.
  * Returns empty container if view has no actions.
+ * Overview has special handling for simulation controls.
  * @param {string} view - View constant from VIEWS
+ * @param {Object} state - Optional state for dynamic content (e.g., simulation state)
  * @returns {string} HTML string for toolbar content
- * @pure
+ * @pure (when state is provided)
  */
-function templateActionToolbar(view) {
+function templateActionToolbar(view, state = {}) {
+    // Overview has special dynamic toolbar with simulation controls
+    if (view === VIEWS.OVERVIEW) {
+        return templateOverviewToolbar(state.simulationRunning, state.lastSimulated);
+    }
+    
     const actions = getViewActions(view);
     
     if (actions.length === 0) {
@@ -118,6 +125,51 @@ function templateActionToolbar(view) {
     return `
         <div class="container mx-auto px-4 py-2 flex flex-wrap items-center gap-2">
             ${buttonsHtml}
+        </div>
+    `;
+}
+
+/**
+ * Renders the Overview toolbar with simulation controls.
+ * @param {boolean} isRunning - Whether simulation is currently running
+ * @param {number} lastSimulatedTime - Timestamp of last simulation tick
+ * @returns {string} HTML string for overview toolbar
+ * @pure
+ */
+function templateOverviewToolbar(isRunning = false, lastSimulatedTime = Date.now()) {
+    const buttonClass = isRunning 
+        ? 'bg-red-600 hover:bg-red-700' 
+        : 'bg-green-600 hover:bg-green-700';
+    const buttonIcon = isRunning ? '⏹️' : '▶️';
+    const buttonText = isRunning ? 'Stop' : 'Start';
+    const handler = isRunning ? 'stopSimulation()' : 'startSimulation()';
+    
+    const statusIndicator = isRunning 
+        ? `<span class="flex items-center gap-2">
+               <span class="w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+               <span class="text-green-600 dark:text-green-400 font-medium text-sm">Running</span>
+           </span>` 
+        : '<span class="text-gray-500 dark:text-gray-400 text-sm">Stopped</span>';
+    
+    return `
+        <div class="container mx-auto px-4 py-2 flex flex-wrap items-center gap-3">
+            <button 
+                onclick="${handler}" 
+                id="toolbar-sim-btn" 
+                class="flex items-center gap-1.5 ${buttonClass} text-white px-3 py-1.5 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+                data-tippy-content="Demo mode: simulates real-time data from PLCs/RTUs including status changes, alarms, and events"
+            >
+                <span>${buttonIcon}</span>
+                <span class="hidden sm:inline">${buttonText} Simulation</span>
+                <span class="sm:hidden">Sim</span>
+            </button>
+            <div class="flex items-center gap-2" id="sim-status">
+                ${statusIndicator}
+            </div>
+            <div class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+            <span id="sim-ticker" class="text-sm text-gray-600 dark:text-gray-400" data-tippy-content="Timestamp of last data poll - in production this would be real-time updates via OPC-UA or MQTT">
+                Last: ${formatAgo(lastSimulatedTime)}
+            </span>
         </div>
     `;
 }
@@ -627,7 +679,12 @@ function templateHelpPage() {
 // OVERVIEW PAGE
 // ============================================================================
 
+// ============================================================================
+// SIMULATION CONTROLS (DEPRECATED - now in toolbar via templateOverviewToolbar)
+// ============================================================================
+
 /**
+ * @deprecated Use templateOverviewToolbar() instead - controls are now in sticky toolbar.
  * Renders the simulation controls for the overview page.
  * @param {boolean} isRunning - Whether simulation is currently running
  * @param {number} lastSimulatedTime - Timestamp of last simulation tick

@@ -36,7 +36,12 @@ function updateActionToolbar(view) {
         return;
     }
     
-    toolbar.innerHTML = templateActionToolbar(view);
+    // Pass simulation state for Overview toolbar
+    const state = view === VIEWS.OVERVIEW 
+        ? { simulationRunning, lastSimulated } 
+        : {};
+    
+    toolbar.innerHTML = templateActionToolbar(view, state);
     
     // Re-initialize tooltips for toolbar buttons
     if (typeof tippy !== 'undefined') {
@@ -137,7 +142,6 @@ function renderOverview() {
                 <canvas id="eventsChart"></canvas>
             </div>
         </div>
-        ${templateSimulationControls(simulationRunning, lastSimulated)}
     `;
 }
 

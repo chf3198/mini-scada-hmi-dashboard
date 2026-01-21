@@ -710,8 +710,25 @@ if (window.location.search.includes('test=1')) {
     
     // Test templateActionToolbar function
     assert(typeof templateActionToolbar === 'function', 'templateActionToolbar function exists');
-    const emptyToolbar = templateActionToolbar(VIEWS.OVERVIEW);
-    assert(emptyToolbar === '', 'Empty toolbar returns empty string for OVERVIEW');
+    
+    // Test Overview toolbar has simulation controls
+    assert(typeof templateOverviewToolbar === 'function', 'templateOverviewToolbar function exists');
+    const overviewToolbarStopped = templateOverviewToolbar(false, Date.now());
+    assert(overviewToolbarStopped.includes('startSimulation'), 'Stopped toolbar has start handler');
+    assert(overviewToolbarStopped.includes('Start'), 'Stopped toolbar shows Start text');
+    assert(overviewToolbarStopped.includes('bg-green-600'), 'Start button is green');
+    assert(overviewToolbarStopped.includes('sim-ticker'), 'Toolbar has ticker element');
+    assert(overviewToolbarStopped.includes('Stopped'), 'Stopped status shown when not running');
+    
+    const overviewToolbarRunning = templateOverviewToolbar(true, Date.now());
+    assert(overviewToolbarRunning.includes('stopSimulation'), 'Running toolbar has stop handler');
+    assert(overviewToolbarRunning.includes('Stop'), 'Running toolbar shows Stop text');
+    assert(overviewToolbarRunning.includes('bg-red-600'), 'Stop button is red');
+    assert(overviewToolbarRunning.includes('Running'), 'Running status shown when active');
+    
+    // Test Overview uses special toolbar via templateActionToolbar
+    const overviewToolbar = templateActionToolbar(VIEWS.OVERVIEW, { simulationRunning: false, lastSimulated: Date.now() });
+    assert(overviewToolbar.includes('sim-ticker'), 'Overview toolbar via templateActionToolbar has sim controls');
     
     const helpToolbar = templateActionToolbar(VIEWS.HELP);
     assert(helpToolbar.includes('container'), 'Toolbar has container class');
