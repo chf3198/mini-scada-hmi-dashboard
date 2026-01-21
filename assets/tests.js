@@ -524,6 +524,94 @@ if (window.location.search.includes('test=1')) {
     assert(bodyClasses.includes('dark:text-gray-100'), 'Body has dark mode text class');
 
     // ========================================================================
+    // Commissioning Section Progress Tests (Pure Functions)
+    // ========================================================================
+    console.log('\n📊 Testing Section Progress Calculation...');
+    
+    // Test calculateSectionProgress pure function
+    assert(typeof calculateSectionProgress === 'function', 'calculateSectionProgress function exists');
+    
+    const emptyItems = [];
+    const emptyProgress = calculateSectionProgress(emptyItems);
+    assert(emptyProgress.total === 0, 'calculateSectionProgress handles empty array - total is 0');
+    assert(emptyProgress.checked === 0, 'calculateSectionProgress handles empty array - checked is 0');
+    assert(emptyProgress.progress === 0, 'calculateSectionProgress handles empty array - progress is 0');
+    assert(emptyProgress.isComplete === false, 'calculateSectionProgress handles empty array - not complete');
+    
+    const mixedItems = [
+        { item: 'Item 1', checked: true },
+        { item: 'Item 2', checked: false },
+        { item: 'Item 3', checked: true }
+    ];
+    const mixedProgress = calculateSectionProgress(mixedItems);
+    assert(mixedProgress.total === 3, 'calculateSectionProgress counts total correctly');
+    assert(mixedProgress.checked === 2, 'calculateSectionProgress counts checked correctly');
+    assert(mixedProgress.progress === 67, 'calculateSectionProgress calculates percentage (67%)');
+    assert(mixedProgress.isComplete === false, 'calculateSectionProgress - not complete at 67%');
+    
+    const allCheckedItems = [
+        { item: 'Item 1', checked: true },
+        { item: 'Item 2', checked: true }
+    ];
+    const completeProgress = calculateSectionProgress(allCheckedItems);
+    assert(completeProgress.progress === 100, 'calculateSectionProgress - 100% when all checked');
+    assert(completeProgress.isComplete === true, 'calculateSectionProgress - isComplete true at 100%');
+    
+    // ========================================================================
+    // Commissioning Section Visibility State Tests (Pure Functions)
+    // ========================================================================
+    console.log('\n👁️ Testing Section Visibility State...');
+    
+    assert(typeof getNextExpandedState === 'function', 'getNextExpandedState function exists');
+    assert(getNextExpandedState(true) === false, 'getNextExpandedState: true -> false');
+    assert(getNextExpandedState(false) === true, 'getNextExpandedState: false -> true');
+    
+    assert(typeof getSectionVisibilityState === 'function', 'getSectionVisibilityState function exists');
+    const expandedState = getSectionVisibilityState(true);
+    assert(expandedState.detailHidden === false, 'getSectionVisibilityState(true) - detailHidden is false');
+    assert(expandedState.chevronText === '▼', 'getSectionVisibilityState(true) - chevron is down arrow');
+    
+    const collapsedState = getSectionVisibilityState(false);
+    assert(collapsedState.detailHidden === true, 'getSectionVisibilityState(false) - detailHidden is true');
+    assert(collapsedState.chevronText === '▶', 'getSectionVisibilityState(false) - chevron is right arrow');
+    
+    // ========================================================================
+    // Commissioning Template Tests
+    // ========================================================================
+    console.log('\n📝 Testing Commissioning Templates...');
+    
+    // Test templateCommissioningSection renders correctly
+    const testItems = [
+        { item: 'Test item 1', checked: true },
+        { item: 'Test item 2', checked: false }
+    ];
+    
+    // Test collapsed state (default)
+    const collapsedSection = templateCommissioningSection('TestSection', testItems, false);
+    assert(collapsedSection.includes('data-section="TestSection"'), 'Section has data-section attribute');
+    assert(collapsedSection.includes('toggleCommissioningSection'), 'Section header has toggle onclick');
+    assert(collapsedSection.includes('chevron-section-TestSection'), 'Section has chevron element with ID');
+    assert(collapsedSection.includes('detail-section-TestSection'), 'Section has detail element with ID');
+    assert(collapsedSection.includes('hidden'), 'Collapsed section has hidden class');
+    assert(collapsedSection.includes('▶'), 'Collapsed section has right chevron');
+    
+    // Test expanded state
+    const expandedSection = templateCommissioningSection('TestSection', testItems, true);
+    assert(!expandedSection.includes('class="hidden'), 'Expanded section does not have hidden class');
+    assert(expandedSection.includes('▼'), 'Expanded section has down chevron');
+    
+    // Test progress display in template
+    assert(collapsedSection.includes('1/2 complete'), 'Section shows correct progress count');
+    assert(collapsedSection.includes('50%'), 'Section shows correct progress percentage');
+    
+    // Test templateCommissioningActions includes expand/collapse buttons
+    const actionsHtml = templateCommissioningActions();
+    assert(actionsHtml.includes('expandAllSections'), 'Actions include Expand All button');
+    assert(actionsHtml.includes('collapseAllSections'), 'Actions include Collapse All button');
+    assert(actionsHtml.includes('Expand All'), 'Expand All button has correct text');
+    assert(actionsHtml.includes('Collapse All'), 'Collapse All button has correct text');
+
+    // ========================================================================
     // Test Summary
     // ========================================================================
     console.log('\n' + '='.repeat(50));

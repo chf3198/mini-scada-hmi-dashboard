@@ -157,40 +157,64 @@ function templateChecklistItem(section, checklistItem) {
 }
 
 /**
+ * Calculates section progress metrics (pure function for testability).
+ * @param {Object[]} sectionItems - Array of checklist items
+ * @returns {{checked: number, total: number, progress: number, isComplete: boolean}}
+ * @pure
+ */
+function calculateSectionProgress(sectionItems) {
+    const total = sectionItems.length;
+    const checked = sectionItems.filter(item => item.checked).length;
+    const progress = total > 0 ? Math.round((checked / total) * 100) : 0;
+    return {
+        checked,
+        total,
+        progress,
+        isComplete: progress === 100
+    };
+}
+
+/**
  * Renders a commissioning section with progress bar.
+ * Collapsed by default for progressive disclosure UX pattern.
  * @param {string} section - Section name (e.g., 'Safety')
  * @param {Object[]} sectionItems - Array of checklist items
+ * @param {boolean} expanded - Whether section is expanded (default: false)
  * @returns {string} HTML string for section
  * @pure
  */
-function templateCommissioningSection(section, sectionItems) {
-    const sectionChecked = sectionItems.filter(item => item.checked).length;
-    const sectionTotal = sectionItems.length;
-    const sectionProgress = sectionTotal > 0 ? Math.round((sectionChecked / sectionTotal) * 100) : 0;
-    const isComplete = sectionProgress === 100;
+function templateCommissioningSection(section, sectionItems, expanded = false) {
+    const { checked, total, progress, isComplete } = calculateSectionProgress(sectionItems);
     
     const itemsHtml = sectionItems
         .map(item => templateChecklistItem(section, item))
         .join('');
     
+    const chevronIcon = expanded ? '▼' : '▶';
+    const hiddenClass = expanded ? '' : 'hidden';
+    const headerBgClass = isComplete ? 'bg-green-50 dark:bg-green-900/30' : '';
+    const progressBarColor = isComplete ? 'bg-green-500' : 'bg-blue-500';
+    const progressTextColor = isComplete ? 'text-green-600' : 'text-blue-600';
+    
     return `
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-4" data-tippy-content="${SECTION_TOOLTIPS[section] || 'Commissioning section'}">
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between ${isComplete ? 'bg-green-50 dark:bg-green-900/30' : ''}">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-3" data-section="${section}" data-tippy-content="${SECTION_TOOLTIPS[section] || 'Commissioning section'}">
+            <div class="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${headerBgClass}" onclick="toggleCommissioningSection('${section}')">
                 <div class="flex items-center gap-3">
                     <span class="text-2xl">${SECTION_ICONS[section] || '📋'}</span>
                     <div>
                         <h3 class="text-lg font-bold">${section}</h3>
-                        <span class="text-sm text-gray-500">${sectionChecked}/${sectionTotal} complete</span>
+                        <span class="text-sm text-gray-500">${checked}/${total} complete</span>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-4">
                     <div class="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div class="h-full ${isComplete ? 'bg-green-500' : 'bg-blue-500'} transition-all" style="width: ${sectionProgress}%"></div>
+                        <div class="h-full ${progressBarColor} transition-all" style="width: ${progress}%"></div>
                     </div>
-                    <span class="text-sm font-bold ${isComplete ? 'text-green-600' : 'text-blue-600'}">${sectionProgress}%</span>
+                    <span class="text-sm font-bold ${progressTextColor}">${progress}%</span>
+                    <span class="text-gray-400 text-xl transition-transform" id="chevron-section-${section}">${chevronIcon}</span>
                 </div>
             </div>
-            <div class="p-3 space-y-1">
+            <div id="detail-section-${section}" class="${hiddenClass} border-t border-gray-200 dark:border-gray-700 p-3 space-y-1">
                 ${itemsHtml}
             </div>
         </div>
@@ -607,13 +631,20 @@ function templateProgressCard(checkedItems, totalItems) {
 }
 
 /**
- * Renders the import/export action buttons.
+ * Renders the import/export action buttons with expand/collapse controls.
  * @returns {string} HTML string for action buttons
  * @pure
  */
 function templateCommissioningActions() {
     return `
-        <div class="flex flex-wrap gap-3 mt-6">
+        <div class="flex flex-wrap gap-3 mt-4">
+            <button onclick="expandAllSections()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Expand all sections to view all checklist items">
+                <span>⬇️</span> Expand All
+            </button>
+            <button onclick="collapseAllSections()" class="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Collapse all sections for a compact overview">
+                <span>⬆️</span> Collapse All
+            </button>
+            <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
             <button onclick="exportChecklist()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Download checklist as JSON file for documentation and audit trail">
                 <span>📤</span> Export to JSON
             </button>

@@ -132,6 +132,108 @@ function showRunbook(runbookCode) {
     }
 }
 
+// ============================================================================
+// COMMISSIONING SECTION HANDLERS (Accordion Pattern)
+// ============================================================================
+
+/**
+ * Determines the new expanded state for a section (pure function).
+ * @param {boolean} currentlyExpanded - Whether section is currently expanded
+ * @returns {boolean} New expanded state
+ * @pure
+ */
+function getNextExpandedState(currentlyExpanded) {
+    return !currentlyExpanded;
+}
+
+/**
+ * Determines visibility state for section elements (pure function).
+ * @param {boolean} expanded - Whether section should be expanded
+ * @returns {{detailHidden: boolean, chevronText: string}}
+ * @pure
+ */
+function getSectionVisibilityState(expanded) {
+    return {
+        detailHidden: !expanded,
+        chevronText: expanded ? '▼' : '▶'
+    };
+}
+
+/**
+ * Toggles a commissioning section's expanded/collapsed state.
+ * Implements accordion behavior - only one section open at a time.
+ * @param {string} sectionName - The section name to toggle
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function toggleCommissioningSection(sectionName) {
+    const sections = Object.keys(commissioningChecklist);
+    
+    // Close all other sections (accordion behavior)
+    sections.forEach(section => {
+        if (section !== sectionName) {
+            const otherDetail = document.getElementById(`detail-section-${section}`);
+            const otherChevron = document.getElementById(`chevron-section-${section}`);
+            if (otherDetail) otherDetail.classList.add('hidden');
+            if (otherChevron) otherChevron.textContent = '▶';
+        }
+    });
+    
+    // Toggle the clicked section
+    const detailElement = document.getElementById(`detail-section-${sectionName}`);
+    const chevronElement = document.getElementById(`chevron-section-${sectionName}`);
+    
+    if (!detailElement || !chevronElement) {
+        console.error(`Section elements not found for: ${sectionName}`);
+        return;
+    }
+    
+    const currentlyExpanded = !detailElement.classList.contains('hidden');
+    const newState = getSectionVisibilityState(getNextExpandedState(currentlyExpanded));
+    
+    if (newState.detailHidden) {
+        detailElement.classList.add('hidden');
+    } else {
+        detailElement.classList.remove('hidden');
+    }
+    chevronElement.textContent = newState.chevronText;
+}
+
+/**
+ * Expands all commissioning sections.
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function expandAllSections() {
+    const sections = Object.keys(commissioningChecklist);
+    const expandedState = getSectionVisibilityState(true);
+    
+    sections.forEach(section => {
+        const detailElement = document.getElementById(`detail-section-${section}`);
+        const chevronElement = document.getElementById(`chevron-section-${section}`);
+        if (detailElement) detailElement.classList.remove('hidden');
+        if (chevronElement) chevronElement.textContent = expandedState.chevronText;
+    });
+}
+
+/**
+ * Collapses all commissioning sections.
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function collapseAllSections() {
+    const sections = Object.keys(commissioningChecklist);
+    const collapsedState = getSectionVisibilityState(false);
+    
+    sections.forEach(section => {
+        const detailElement = document.getElementById(`detail-section-${section}`);
+        const chevronElement = document.getElementById(`chevron-section-${section}`);
+        if (detailElement) detailElement.classList.add('hidden');
+        if (chevronElement) chevronElement.textContent = collapsedState.chevronText;
+    });
+}
+
+// ============================================================================
+// RUNBOOK HANDLERS
+// ============================================================================
+
 /**
  * Filters the runbook list based on search input.
  * Debounced to avoid excessive re-renders during typing.
