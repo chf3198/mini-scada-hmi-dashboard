@@ -97,6 +97,43 @@ if (window.location.search.includes('test=1')) {
     assert(helpContent.includes('SCADA'), 'renderHelp explains SCADA terminology');
 
     // ========================================================================
+    // Template Function Tests
+    // ========================================================================
+    console.log('\n🧩 Testing Template Functions...');
+    
+    // Test templateMachineCard
+    assert(typeof templateMachineCard === 'function', 'templateMachineCard function exists');
+    const testMachine = { id: 1, name: 'Test Machine', status: 'RUN', healthScore: 95, lastHeartbeat: Date.now() };
+    const machineCardHtml = templateMachineCard(testMachine);
+    assert(machineCardHtml.includes('Test Machine'), 'templateMachineCard includes machine name');
+    assert(machineCardHtml.includes('RUN'), 'templateMachineCard includes status');
+    
+    // Test templateEventRow
+    assert(typeof templateEventRow === 'function', 'templateEventRow function exists');
+    const testEvent = { id: 1, timestamp: Date.now(), severity: 'INFO', message: 'Test', acknowledged: false };
+    const eventRowHtml = templateEventRow(testEvent);
+    assert(eventRowHtml.includes('<tr'), 'templateEventRow returns table row');
+    
+    // Test templateRunbookCard
+    assert(typeof templateRunbookCard === 'function', 'templateRunbookCard function exists');
+    const testRunbook = { code: 'TEST-001', title: 'Test Runbook', steps: ['Step 1', 'Step 2'] };
+    const runbookCardHtml = templateRunbookCard(testRunbook);
+    assert(runbookCardHtml.includes('TEST-001'), 'templateRunbookCard includes runbook code');
+    assert(runbookCardHtml.includes('Step 1'), 'templateRunbookCard includes steps');
+    
+    // Test templateMetricCard
+    assert(typeof templateMetricCard === 'function', 'templateMetricCard function exists');
+    const metricHtml = templateMetricCard('Test Metric', 42, 'text-blue-600', 'Test tooltip');
+    assert(metricHtml.includes('Test Metric'), 'templateMetricCard includes title');
+    assert(metricHtml.includes('42'), 'templateMetricCard includes value');
+    
+    // Test templateHelpPage
+    assert(typeof templateHelpPage === 'function', 'templateHelpPage function exists');
+    const helpPageHtml = templateHelpPage();
+    assert(helpPageHtml.includes('Pro Tips'), 'templateHelpPage includes Pro Tips section');
+    assert(helpPageHtml.includes('Glossary'), 'templateHelpPage includes Glossary section');
+
+    // ========================================================================
     // Validation Tests
     // ========================================================================
     console.log('\n✅ Testing Validation Functions...');
