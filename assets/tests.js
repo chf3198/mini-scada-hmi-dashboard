@@ -266,6 +266,13 @@ if (window.location.search.includes('test=1')) {
     assert(agoResult === '5s ago', 'formatAgo with injected time returns correct result');
     assert(formatAgo(null) === 'Never', 'formatAgo returns Never for null');
     
+    // Test formatTimeCompact
+    assert(typeof formatTimeCompact === 'function', 'formatTimeCompact function exists');
+    const testTimestamp = new Date('2026-01-21T14:30:45').getTime();
+    const compactTime = formatTimeCompact(testTimestamp);
+    assert(compactTime.includes(':'), 'formatTimeCompact returns time with colon separator');
+    assert(formatTimeCompact(null) === 'Never', 'formatTimeCompact returns Never for null');
+    
     // Test templateMachineCard with injectable time
     const testMachineForTemplate = { 
         id: 1, 
@@ -718,6 +725,7 @@ if (window.location.search.includes('test=1')) {
     assert(overviewToolbarStopped.includes('Start'), 'Stopped toolbar shows Start text');
     assert(overviewToolbarStopped.includes('bg-green-600'), 'Start button is green');
     assert(overviewToolbarStopped.includes('sim-ticker'), 'Toolbar has ticker element');
+    assert(overviewToolbarStopped.includes('Last run:'), 'Toolbar shows Last run label');
     assert(overviewToolbarStopped.includes('Stopped'), 'Stopped status shown when not running');
     
     const overviewToolbarRunning = templateOverviewToolbar(true, Date.now());
@@ -729,6 +737,7 @@ if (window.location.search.includes('test=1')) {
     // Test Overview uses special toolbar via templateActionToolbar
     const overviewToolbar = templateActionToolbar(VIEWS.OVERVIEW, { simulationRunning: false, lastSimulated: Date.now() });
     assert(overviewToolbar.includes('sim-ticker'), 'Overview toolbar via templateActionToolbar has sim controls');
+    assert(overviewToolbar.includes('Last run:'), 'Overview toolbar shows actual time');
     
     const helpToolbar = templateActionToolbar(VIEWS.HELP);
     assert(helpToolbar.includes('container'), 'Toolbar has container class');

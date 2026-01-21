@@ -31,6 +31,19 @@ function formatTime(timestamp) {
 }
 
 /**
+ * Formats a Unix timestamp to a compact time string (time only, no date).
+ * Useful for toolbar displays where space is limited.
+ * @param {number|null} timestamp - Unix timestamp in milliseconds, or null
+ * @returns {string} Formatted time string (e.g., "3:45:00 PM") or "Never" if null
+ * @example formatTimeCompact(1705776300000) // => "3:45:00 PM"
+ * @pure
+ */
+function formatTimeCompact(timestamp) {
+    if (!timestamp) return 'Never';
+    return new Date(timestamp).toLocaleTimeString();
+}
+
+/**
  * Formats a timestamp as a relative "X seconds ago" string.
  * Time is injectable for true purity and testability.
  * @param {number|null} timestamp - Unix timestamp in milliseconds, or null
@@ -370,10 +383,10 @@ function startSimulation() {
         
         lastSimulated = currentTime;
         
-        // Update the ticker element in the toolbar
+        // Update the ticker element in the toolbar with actual time
         const ticker = document.getElementById('sim-ticker');
         if (ticker) {
-            ticker.textContent = 'Last: ' + formatAgo(lastSimulated);
+            ticker.textContent = 'Last run: ' + formatTimeCompact(lastSimulated);
         }
     }, SIMULATION.INTERVAL_MS);
 }
