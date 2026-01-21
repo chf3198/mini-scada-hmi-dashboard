@@ -25,6 +25,30 @@
 // ============================================================================
 
 /**
+ * Updates the sticky action toolbar based on current view.
+ * @param {string} view - The current view constant
+ * @sideeffect Updates DOM, initializes tooltips on toolbar buttons
+ */
+function updateActionToolbar(view) {
+    const toolbar = document.getElementById('action-toolbar');
+    if (!toolbar) {
+        console.error('Action toolbar element not found');
+        return;
+    }
+    
+    toolbar.innerHTML = templateActionToolbar(view);
+    
+    // Re-initialize tooltips for toolbar buttons
+    if (typeof tippy !== 'undefined') {
+        tippy('#action-toolbar [data-tippy-content]', { 
+            theme: 'light-border', 
+            placement: 'bottom', 
+            delay: [200, 0] 
+        });
+    }
+}
+
+/**
  * Renders the current view based on the currentView state.
  * Handles view switching, icon initialization, and tooltip setup.
  * @sideeffect Updates DOM, initializes Lucide icons and Tippy tooltips
@@ -37,6 +61,9 @@ function renderCurrentView() {
     }
     
     const view = getCurrentView();
+    
+    // Update sticky action toolbar first
+    updateActionToolbar(view);
     
     switch (view) {
         case VIEWS.OVERVIEW:
@@ -171,7 +198,7 @@ function renderCommissioning() {
         <h2 class="text-2xl font-bold mb-4">Commissioning Checklist</h2>
         ${templateProgressCard(checkedItems, totalItems)}
         ${sections}
-        ${templateCommissioningActions()}
+        <input type="file" id="import-file" accept=".json" onchange="importChecklist(event)" class="hidden">
         <div id="import-status" class="mt-4 hidden"></div>
     `;
 }

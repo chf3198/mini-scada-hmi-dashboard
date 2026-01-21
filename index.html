@@ -40,19 +40,26 @@
     <div id="sr-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
     
     <div id="app" class="min-h-screen">
-        <!-- Navigation -->
-        <nav class="bg-blue-600 dark:bg-blue-800 text-white p-4" role="navigation" aria-label="Main navigation">
-            <div class="container mx-auto flex justify-between items-center">
-                <h1 class="text-xl font-bold">Mini SCADA HMI</h1>
-                <div class="flex space-x-4" role="menubar">
-                    <a href="#/overview" data-route="overview" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Main dashboard showing all machines, alarms, and key performance metrics at a glance">Overview</a>
-                    <a href="#/runbooks" data-route="runbooks" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Standard Operating Procedures (SOPs) for responding to alarms and troubleshooting equipment issues">Runbooks</a>
-                    <a href="#/commissioning" data-route="commissioning" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Factory Acceptance Test (FAT) and Site Acceptance Test (SAT) checklists for equipment validation">Commissioning</a>
-                    <a href="#/help" data-route="help" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="User manual and getting started guide for new operators">Help</a>
-                    <button id="dark-mode-toggle" class="ml-4 focus:outline-none focus:ring-2 focus:ring-white rounded" aria-label="Toggle dark mode" data-tippy-content="Toggle dark mode for reduced eye strain during night shifts">🌙</button>
+        <!-- Sticky Header Container -->
+        <header class="sticky top-0 z-50 shadow-md">
+            <!-- Primary Navigation -->
+            <nav class="bg-blue-600 dark:bg-blue-800 text-white p-4" role="navigation" aria-label="Main navigation">
+                <div class="container mx-auto flex justify-between items-center">
+                    <h1 class="text-xl font-bold">Mini SCADA HMI</h1>
+                    <div class="flex space-x-4" role="menubar">
+                        <a href="#/overview" data-route="overview" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Main dashboard showing all machines, alarms, and key performance metrics at a glance">Overview</a>
+                        <a href="#/runbooks" data-route="runbooks" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Standard Operating Procedures (SOPs) for responding to alarms and troubleshooting equipment issues">Runbooks</a>
+                        <a href="#/commissioning" data-route="commissioning" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Factory Acceptance Test (FAT) and Site Acceptance Test (SAT) checklists for equipment validation">Commissioning</a>
+                        <a href="#/help" data-route="help" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="User manual and getting started guide for new operators">Help</a>
+                        <button id="dark-mode-toggle" class="ml-4 focus:outline-none focus:ring-2 focus:ring-white rounded" aria-label="Toggle dark mode" data-tippy-content="Toggle dark mode for reduced eye strain during night shifts">🌙</button>
+                    </div>
                 </div>
+            </nav>
+            <!-- View-Specific Action Toolbar -->
+            <div id="action-toolbar" class="bg-gray-100 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700" role="toolbar" aria-label="View actions">
+                <!-- Content populated by updateActionToolbar() -->
             </div>
-        </nav>
+        </header>
         <!-- Main content -->
         <main id="main-content" class="container mx-auto p-4" role="main" aria-label="Dashboard content">
             <div id="content"></div>

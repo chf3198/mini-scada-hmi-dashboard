@@ -601,12 +601,12 @@ if (window.location.search.includes('test=1')) {
     assert(collapsedSection.includes('1/2 complete'), 'Section shows correct progress count');
     assert(collapsedSection.includes('50%'), 'Section shows correct progress percentage');
     
-    // Test templateCommissioningActions includes expand/collapse buttons
-    const actionsHtml = templateCommissioningActions();
-    assert(actionsHtml.includes('expandAllSections'), 'Actions include Expand All button');
-    assert(actionsHtml.includes('collapseAllSections'), 'Actions include Collapse All button');
-    assert(actionsHtml.includes('Expand All'), 'Expand All button has correct text');
-    assert(actionsHtml.includes('Collapse All'), 'Collapse All button has correct text');
+    // Test commissioning actions are in VIEW_ACTIONS (now in sticky toolbar)
+    const commissioningActions = getViewActions(VIEWS.COMMISSIONING);
+    assert(commissioningActions.some(a => a.handler === 'expandAllSections()'), 'Commissioning toolbar has Expand All action');
+    assert(commissioningActions.some(a => a.handler === 'collapseAllSections()'), 'Commissioning toolbar has Collapse All action');
+    assert(commissioningActions.some(a => a.handler === 'exportChecklist()'), 'Commissioning toolbar has Export action');
+    assert(commissioningActions.some(a => a.handler === 'resetChecklist()'), 'Commissioning toolbar has Reset action');
 
     // ========================================================================
     // Help Page Collapsible Sections Tests
@@ -655,19 +655,72 @@ if (window.location.search.includes('test=1')) {
     assert(gradientHtml.includes('from-blue-500'), 'Gradient section has from color');
     assert(gradientHtml.includes('to-purple-600'), 'Gradient section has to color');
     
-    // Test templateHelpActions
-    assert(typeof templateHelpActions === 'function', 'templateHelpActions function exists');
-    const helpActionsHtml = templateHelpActions();
-    assert(helpActionsHtml.includes('expandAllHelpSections'), 'Help actions include Expand All');
-    assert(helpActionsHtml.includes('collapseAllHelpSections'), 'Help actions include Collapse All');
-    
-    // Test templateHelpPage renders all sections
+    // Test templateHelpPage renders all sections (without inline actions - now in toolbar)
     assert(typeof templateHelpPage === 'function', 'templateHelpPage function exists');
     const helpPageHtml = templateHelpPage();
     assert(helpPageHtml.includes('User Manual'), 'Help page has title');
     assert(helpPageHtml.includes('data-help-section="scada-hmi"'), 'Help page includes SCADA section');
     assert(helpPageHtml.includes('data-help-section="glossary"'), 'Help page includes Glossary section');
     assert(helpPageHtml.includes('data-help-section="tips"'), 'Help page includes Tips section');
+
+    // ========================================================================
+    // Sticky Action Toolbar Tests
+    // ========================================================================
+    console.log('\n🔧 Testing Sticky Action Toolbar...');
+    
+    // Test VIEW_ACTIONS constant
+    assert(typeof VIEW_ACTIONS === 'object', 'VIEW_ACTIONS constant exists');
+    assert(Object.isFrozen(VIEW_ACTIONS), 'VIEW_ACTIONS is frozen (immutable)');
+    
+    // Test getViewActions function
+    assert(typeof getViewActions === 'function', 'getViewActions function exists');
+    assert(Array.isArray(getViewActions(VIEWS.OVERVIEW)), 'getViewActions returns array for OVERVIEW');
+    assert(getViewActions(VIEWS.OVERVIEW).length === 0, 'OVERVIEW has no toolbar actions');
+    assert(getViewActions(VIEWS.RUNBOOKS).length === 2, 'RUNBOOKS has 2 toolbar actions');
+    assert(getViewActions(VIEWS.COMMISSIONING).length === 6, 'COMMISSIONING has 6 toolbar actions (incl separator)');
+    assert(getViewActions(VIEWS.HELP).length === 2, 'HELP has 2 toolbar actions');
+    assert(getViewActions(VIEWS.MACHINE).length === 1, 'MACHINE has 1 toolbar action (back)');
+    
+    // Test action structure
+    const runbookActions = getViewActions(VIEWS.RUNBOOKS);
+    assert(runbookActions[0].id === 'expand-all-runbooks', 'First runbook action is expand');
+    assert(runbookActions[0].handler === 'expandAllRunbooks()', 'Expand action has correct handler');
+    assert(typeof runbookActions[0].tooltip === 'string', 'Actions have tooltips');
+    
+    // Test getActionButtonClasses function
+    assert(typeof getActionButtonClasses === 'function', 'getActionButtonClasses function exists');
+    assert(getActionButtonClasses('indigo').includes('bg-indigo-600'), 'Indigo class correct');
+    assert(getActionButtonClasses('red').includes('bg-red-600'), 'Red class correct');
+    assert(getActionButtonClasses('unknown').includes('bg-gray-500'), 'Unknown color defaults to gray');
+    
+    // Test templateActionButton function
+    assert(typeof templateActionButton === 'function', 'templateActionButton function exists');
+    const testAction = { id: 'test-btn', label: 'Test', icon: '🧪', handler: 'testFn()', color: 'blue', tooltip: 'Test tooltip' };
+    const actionBtnHtml = templateActionButton(testAction);
+    assert(actionBtnHtml.includes('toolbar-test-btn'), 'Action button has correct ID');
+    assert(actionBtnHtml.includes('testFn()'), 'Action button has onclick handler');
+    assert(actionBtnHtml.includes('Test tooltip'), 'Action button has tooltip');
+    assert(actionBtnHtml.includes('bg-blue-600'), 'Action button has correct color');
+    
+    // Test separator rendering
+    const separatorAction = { id: 'sep', isSeparator: true };
+    const separatorHtml = templateActionButton(separatorAction);
+    assert(separatorHtml.includes('w-px'), 'Separator has width class');
+    assert(separatorHtml.includes('bg-gray-300'), 'Separator has background');
+    
+    // Test templateActionToolbar function
+    assert(typeof templateActionToolbar === 'function', 'templateActionToolbar function exists');
+    const emptyToolbar = templateActionToolbar(VIEWS.OVERVIEW);
+    assert(emptyToolbar === '', 'Empty toolbar returns empty string for OVERVIEW');
+    
+    const helpToolbar = templateActionToolbar(VIEWS.HELP);
+    assert(helpToolbar.includes('container'), 'Toolbar has container class');
+    assert(helpToolbar.includes('expandAllHelpSections'), 'Help toolbar has expand action');
+    assert(helpToolbar.includes('collapseAllHelpSections'), 'Help toolbar has collapse action');
+    
+    // Test runbook handlers exist
+    assert(typeof expandAllRunbooks === 'function', 'expandAllRunbooks function exists');
+    assert(typeof collapseAllRunbooks === 'function', 'collapseAllRunbooks function exists');
 
     // ========================================================================
     // Test Summary

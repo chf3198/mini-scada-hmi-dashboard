@@ -16,6 +16,113 @@
  */
 
 // ============================================================================
+// STICKY ACTION TOOLBAR (View-Specific Actions)
+// ============================================================================
+
+/**
+ * Action configuration for each view.
+ * Each action has: id, label, icon, handler, color, tooltip
+ * @constant {Object}
+ */
+const VIEW_ACTIONS = Object.freeze({
+    [VIEWS.OVERVIEW]: [],
+    [VIEWS.MACHINE]: [
+        { id: 'back-overview', label: 'Back to Overview', icon: '←', handler: "window.location.hash = '#/overview'", color: 'gray', tooltip: 'Return to main dashboard' }
+    ],
+    [VIEWS.RUNBOOKS]: [
+        { id: 'expand-all-runbooks', label: 'Expand All', icon: '⬇️', handler: 'expandAllRunbooks()', color: 'indigo', tooltip: 'Expand all runbook procedures' },
+        { id: 'collapse-all-runbooks', label: 'Collapse All', icon: '⬆️', handler: 'collapseAllRunbooks()', color: 'gray', tooltip: 'Collapse all runbook procedures' }
+    ],
+    [VIEWS.COMMISSIONING]: [
+        { id: 'expand-all-sections', label: 'Expand All', icon: '⬇️', handler: 'expandAllSections()', color: 'indigo', tooltip: 'Expand all checklist sections' },
+        { id: 'collapse-all-sections', label: 'Collapse All', icon: '⬆️', handler: 'collapseAllSections()', color: 'gray', tooltip: 'Collapse all checklist sections' },
+        { id: 'separator-1', isSeparator: true },
+        { id: 'export-checklist', label: 'Export', icon: '📤', handler: 'exportChecklist()', color: 'blue', tooltip: 'Download checklist as JSON for documentation' },
+        { id: 'import-checklist', label: 'Import', icon: '📥', handler: "document.getElementById('import-file').click()", color: 'gray', tooltip: 'Import previously exported checklist' },
+        { id: 'reset-checklist', label: 'Reset', icon: '🔄', handler: 'resetChecklist()', color: 'red', tooltip: 'Reset all items to unchecked - use with caution!' }
+    ],
+    [VIEWS.HELP]: [
+        { id: 'expand-all-help', label: 'Expand All', icon: '⬇️', handler: 'expandAllHelpSections()', color: 'indigo', tooltip: 'Expand all manual sections' },
+        { id: 'collapse-all-help', label: 'Collapse All', icon: '⬆️', handler: 'collapseAllHelpSections()', color: 'gray', tooltip: 'Collapse all manual sections' }
+    ]
+});
+
+/**
+ * Gets action configuration for a given view.
+ * @param {string} view - View constant from VIEWS
+ * @returns {Object[]} Array of action objects
+ * @pure
+ */
+function getViewActions(view) {
+    return VIEW_ACTIONS[view] || [];
+}
+
+/**
+ * Maps color name to Tailwind button classes.
+ * @param {string} color - Color name (indigo, gray, blue, red, green)
+ * @returns {string} Tailwind CSS classes for button
+ * @pure
+ */
+function getActionButtonClasses(color) {
+    const colorMap = {
+        indigo: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+        gray: 'bg-gray-500 hover:bg-gray-600 text-white',
+        blue: 'bg-blue-600 hover:bg-blue-700 text-white',
+        red: 'bg-red-600 hover:bg-red-700 text-white',
+        green: 'bg-green-600 hover:bg-green-700 text-white'
+    };
+    return colorMap[color] || colorMap.gray;
+}
+
+/**
+ * Renders a single action button for the toolbar.
+ * @param {Object} action - Action configuration object
+ * @returns {string} HTML string for action button
+ * @pure
+ */
+function templateActionButton(action) {
+    if (action.isSeparator) {
+        return '<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>';
+    }
+    
+    const classes = getActionButtonClasses(action.color);
+    return `
+        <button 
+            id="toolbar-${action.id}" 
+            onclick="${action.handler}" 
+            class="flex items-center gap-1.5 ${classes} px-3 py-1.5 rounded text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500"
+            data-tippy-content="${action.tooltip}"
+        >
+            <span>${action.icon}</span>
+            <span class="hidden sm:inline">${action.label}</span>
+        </button>
+    `;
+}
+
+/**
+ * Renders the complete action toolbar for a view.
+ * Returns empty container if view has no actions.
+ * @param {string} view - View constant from VIEWS
+ * @returns {string} HTML string for toolbar content
+ * @pure
+ */
+function templateActionToolbar(view) {
+    const actions = getViewActions(view);
+    
+    if (actions.length === 0) {
+        return ''; // Empty toolbar, will collapse visually
+    }
+    
+    const buttonsHtml = actions.map(templateActionButton).join('');
+    
+    return `
+        <div class="container mx-auto px-4 py-2 flex flex-wrap items-center gap-2">
+            ${buttonsHtml}
+        </div>
+    `;
+}
+
+// ============================================================================
 // COMPONENT TEMPLATES
 // ============================================================================
 
@@ -494,26 +601,9 @@ function templateHelpSectionCollapsible(section, expanded = false) {
 }
 
 /**
- * Renders help page action buttons (expand/collapse all).
- * @returns {string} HTML string for action buttons
- * @pure
- */
-function templateHelpActions() {
-    return `
-        <div class="flex flex-wrap gap-3 mb-6">
-            <button onclick="expandAllHelpSections()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Expand all sections to view full manual">
-                <span>⬇️</span> Expand All
-            </button>
-            <button onclick="collapseAllHelpSections()" class="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Collapse all sections for quick navigation">
-                <span>⬆️</span> Collapse All
-            </button>
-        </div>
-    `;
-}
-
-/**
  * Returns the complete Help/User Manual page content with collapsible sections.
  * Progressive disclosure pattern for improved UX.
+ * Action buttons are now in the sticky toolbar.
  * @returns {string} HTML string for the help page
  * @pure
  */
@@ -526,7 +616,6 @@ function templateHelpPage() {
         <div class="max-w-4xl mx-auto">
             <h2 class="text-3xl font-bold mb-4">📖 User Manual</h2>
             <p class="text-gray-600 dark:text-gray-400 mb-6">Welcome to the Mini SCADA HMI Dashboard! Click any section below to learn more.</p>
-            ${templateHelpActions()}
             <div class="space-y-3">
                 ${sectionsHtml}
             </div>
@@ -704,31 +793,4 @@ function templateProgressCard(checkedItems, totalItems) {
     `;
 }
 
-/**
- * Renders the import/export action buttons with expand/collapse controls.
- * @returns {string} HTML string for action buttons
- * @pure
- */
-function templateCommissioningActions() {
-    return `
-        <div class="flex flex-wrap gap-3 mt-4">
-            <button onclick="expandAllSections()" class="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Expand all sections to view all checklist items">
-                <span>⬇️</span> Expand All
-            </button>
-            <button onclick="collapseAllSections()" class="flex items-center gap-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Collapse all sections for a compact overview">
-                <span>⬆️</span> Collapse All
-            </button>
-            <div class="w-px bg-gray-300 dark:bg-gray-600 mx-1"></div>
-            <button onclick="exportChecklist()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Download checklist as JSON file for documentation and audit trail">
-                <span>📤</span> Export to JSON
-            </button>
-            <button onclick="document.getElementById('import-file').click()" class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Import a previously exported checklist JSON file">
-                <span>📥</span> Import from JSON
-            </button>
-            <input type="file" id="import-file" accept=".json" onchange="importChecklist(event)" class="hidden">
-            <button onclick="resetChecklist()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Reset all checklist items to unchecked - use with caution!">
-                <span>🔄</span> Reset All
-            </button>
-        </div>
-    `;
-}
+// Note: Commissioning actions are now in the sticky toolbar (VIEW_ACTIONS constant)

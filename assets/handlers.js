@@ -132,6 +132,32 @@ function showRunbook(runbookCode) {
     }
 }
 
+/**
+ * Expands all runbook sections.
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function expandAllRunbooks() {
+    runbooks.forEach(runbook => {
+        const detailElement = document.getElementById(`detail-${runbook.code}`);
+        const chevronElement = document.getElementById(`chevron-${runbook.code}`);
+        if (detailElement) detailElement.classList.remove('hidden');
+        if (chevronElement) chevronElement.textContent = '▼';
+    });
+}
+
+/**
+ * Collapses all runbook sections.
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function collapseAllRunbooks() {
+    runbooks.forEach(runbook => {
+        const detailElement = document.getElementById(`detail-${runbook.code}`);
+        const chevronElement = document.getElementById(`chevron-${runbook.code}`);
+        if (detailElement) detailElement.classList.add('hidden');
+        if (chevronElement) chevronElement.textContent = '▶';
+    });
+}
+
 // ============================================================================
 // COMMISSIONING SECTION HANDLERS (Accordion Pattern)
 // ============================================================================
