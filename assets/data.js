@@ -121,5 +121,8 @@ let machinesDown = 1;
 /** @type {number} Total downtime minutes accumulated today */
 let downtimeMinutesToday = 60;
 
-/** @type {number|null} Timestamp of last simulation tick */
-let lastSimulated = null;
+/** @type {number|null} Timestamp of last simulation tick (loaded from localStorage) */
+let lastSimulated = (function() {
+    const saved = localStorage.getItem(STORAGE_KEYS.LAST_SIMULATED);
+    return saved ? parseInt(saved, 10) : null;
+})();

@@ -119,7 +119,8 @@ const VIEWS = Object.freeze({
  * @constant {Object}
  */
 const STORAGE_KEYS = Object.freeze({
-    CHECKLIST: 'commissioningChecklist'
+    CHECKLIST: 'commissioningChecklist',
+    LAST_SIMULATED: 'lastSimulated'
 });
 
 /**

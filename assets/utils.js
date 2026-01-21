@@ -362,6 +362,7 @@ function simulateTick(currentMachines, currentTime) {
 function startSimulation() {
     simulationRunning = true;
     lastSimulated = Date.now();
+    localStorage.setItem(STORAGE_KEYS.LAST_SIMULATED, lastSimulated.toString());
     
     // Update UI to show simulation is running
     renderCurrentView();
@@ -382,6 +383,7 @@ function startSimulation() {
         });
         
         lastSimulated = currentTime;
+        localStorage.setItem(STORAGE_KEYS.LAST_SIMULATED, lastSimulated.toString());
         
         // Update the ticker element in the toolbar with full date/time
         const ticker = document.getElementById('sim-ticker');
