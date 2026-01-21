@@ -20,6 +20,19 @@ let downtimeChartInstance = null;
 /** @type {Chart|null} Chart.js instance for events chart */
 let eventsChartInstance = null;
 
+/**
+ * Gets chart colors based on current dark mode state.
+ * @returns {{gridColor: string, textColor: string, isDark: boolean}} Color configuration
+ */
+function getChartColors() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return {
+        isDark,
+        gridColor: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+        textColor: isDark ? '#e5e7eb' : '#374151'
+    };
+}
+
 // ============================================================================
 // CHART RENDERING
 // ============================================================================
@@ -70,6 +83,9 @@ function renderDowntimeChart() {
             return machineDowntime;
         });
         
+        // Get colors based on dark mode
+        const colors = getChartColors();
+        
         downtimeChartInstance = new Chart(downtimeContext, {
             type: 'bar',
             data: {
@@ -77,7 +93,7 @@ function renderDowntimeChart() {
                 datasets: [{
                     label: 'Downtime (min)',
                     data: downtimeByMachine,
-                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.4)',
                     borderColor: 'rgba(255, 99, 132, 1)',
                     borderWidth: 1
                 }]
@@ -87,6 +103,11 @@ function renderDowntimeChart() {
                     title: {
                         display: false,
                         text: 'Machine Downtime in Minutes'
+                    },
+                    legend: {
+                        labels: {
+                            color: colors.textColor
+                        }
                     }
                 },
                 scales: {
@@ -94,7 +115,22 @@ function renderDowntimeChart() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Minutes'
+                            text: 'Minutes',
+                            color: colors.textColor
+                        },
+                        ticks: {
+                            color: colors.textColor
+                        },
+                        grid: {
+                            color: colors.gridColor
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: colors.textColor
+                        },
+                        grid: {
+                            color: colors.gridColor
                         }
                     }
                 }
@@ -133,6 +169,9 @@ function renderEventsChart() {
         };
         events.forEach(eventEntry => severityCounts[eventEntry.severity]++);
         
+        // Get colors based on dark mode
+        const colors = getChartColors();
+        
         eventsChartInstance = new Chart(eventsContext, {
             type: 'pie',
             data: {
@@ -145,7 +184,10 @@ function renderEventsChart() {
             options: {
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            color: colors.textColor
+                        }
                     }
                 }
             }

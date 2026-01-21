@@ -234,6 +234,7 @@ function handleKeyboardActivation(event, action) {
 /**
  * Dark mode toggle button handler.
  * Toggles the 'dark' class on the document root and updates button icon.
+ * Re-renders charts to update colors for new theme.
  * Includes error handling and accessibility announcement.
  */
 document.getElementById('dark-mode-toggle').addEventListener('click', () => {
@@ -243,6 +244,14 @@ document.getElementById('dark-mode-toggle').addEventListener('click', () => {
         const isDark = document.documentElement.classList.contains('dark');
         toggleButton.textContent = isDark ? '☀️' : '🌙';
         toggleButton.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        
+        // Re-render charts with updated colors for the new theme
+        if (typeof renderCharts === 'function') {
+            const downtimeCanvas = document.getElementById('downtimeChart');
+            if (downtimeCanvas) {
+                renderCharts();
+            }
+        }
         
         announceToScreenReader(isDark ? 'Dark mode enabled' : 'Light mode enabled');
     } catch (error) {
