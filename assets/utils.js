@@ -383,10 +383,10 @@ function startSimulation() {
         
         lastSimulated = currentTime;
         
-        // Update the ticker element in the toolbar with actual time
+        // Update the ticker element in the toolbar with full date/time
         const ticker = document.getElementById('sim-ticker');
         if (ticker) {
-            ticker.textContent = 'Last run: ' + formatTimeCompact(lastSimulated);
+            ticker.textContent = 'Last run: ' + formatTime(lastSimulated);
         }
     }, SIMULATION.INTERVAL_MS);
 }

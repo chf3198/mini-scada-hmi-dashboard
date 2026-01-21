@@ -168,7 +168,7 @@ function templateOverviewToolbar(isRunning = false, lastSimulatedTime = Date.now
             </div>
             <div class="w-px h-5 bg-gray-300 dark:bg-gray-600 mx-1"></div>
             <span id="sim-ticker" class="text-sm text-gray-600 dark:text-gray-400" data-tippy-content="Timestamp of last simulation tick - in production this would show real-time updates via OPC-UA or MQTT">
-                Last run: ${formatTimeCompact(lastSimulatedTime)}
+                Last run: ${lastSimulatedTime ? formatTime(lastSimulatedTime) : 'Never'}
             </span>
         </div>
     `;
@@ -704,7 +704,7 @@ function templateSimulationControls(isRunning, lastSimulatedTime) {
                 ${buttonText} Simulation
             </button>
             <span id="sim-status">${statusIndicator}</span>
-            <span id="sim-ticker" class="text-sm text-gray-600 dark:text-gray-400" data-tippy-content="Timestamp of last simulation run">Last run: ${formatTimeCompact(lastSimulatedTime)}</span>
+            <span id="sim-ticker" class="text-sm text-gray-600 dark:text-gray-400" data-tippy-content="Timestamp of last simulation run">Last run: ${lastSimulatedTime ? formatTime(lastSimulatedTime) : 'Never'}</span>
         </div>
     `;
 }
