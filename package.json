@@ -34,6 +34,7 @@
   },
   "scripts": {
     "start": "python3 -m http.server 8080",
-    "test": "echo \"Open index.html?test=1 in a browser to run tests\""
+    "test": "echo \"Open index.html?test=1 in a browser to run tests\"",
+    "screenshots": "./scripts/capture-screenshots.sh"
   }
 }
