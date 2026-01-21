@@ -1,40 +1,107 @@
-// Self-tests for key functions
-// Run with ?test=1 in URL
+'use strict';
+
+/**
+ * @file Self-tests for Mini SCADA HMI Dashboard
+ * @description Unit tests for core application functionality.
+ *              Run with ?test=1 URL parameter.
+ * @module tests
+ */
+
+// ============================================================================
+// TEST RUNNER
+// ============================================================================
 
 if (window.location.search.includes('test=1')) {
-    console.log('Running self-tests...');
+    console.log('🧪 Running self-tests...');
+    let passCount = 0;
+    let failCount = 0;
 
-    // Test event generation
-    const initialEvents = events.length;
-    generateEvent(1, 'INFO', 'Test event');
-    console.assert(events.length === initialEvents + 1, 'Event generation failed');
-    console.assert(events[0].message === 'Test event', 'Event message incorrect');
+    /**
+     * Custom assertion with pass/fail counting.
+     * @param {boolean} condition - The condition to test
+     * @param {string} testName - Description of the test
+     */
+    function assert(condition, testName) {
+        if (condition) {
+            passCount++;
+            console.log(`✅ PASS: ${testName}`);
+        } else {
+            failCount++;
+            console.error(`❌ FAIL: ${testName}`);
+        }
+    }
 
-    // Test downtime calculation
+    // ========================================================================
+    // Constants Tests
+    // ========================================================================
+    console.log('\n📦 Testing Constants...');
+    
+    assert(typeof SIMULATION === 'object', 'SIMULATION constant exists');
+    assert(SIMULATION.INTERVAL_MS > 0, 'SIMULATION.INTERVAL_MS is positive');
+    assert(typeof SEVERITY === 'object', 'SEVERITY constant exists');
+    assert(SEVERITY.INFO === 'INFO', 'SEVERITY.INFO equals "INFO"');
+    assert(SEVERITY.WARNING === 'WARN', 'SEVERITY.WARNING equals "WARN"');
+    assert(SEVERITY.ALARM === 'ALARM', 'SEVERITY.ALARM equals "ALARM"');
+    assert(typeof MACHINE_STATUS === 'object', 'MACHINE_STATUS constant exists');
+    assert(typeof VIEWS === 'object', 'VIEWS constant exists');
+    assert(typeof REQUIRED_CHECKLIST_SECTIONS === 'object', 'REQUIRED_CHECKLIST_SECTIONS exists');
+
+    // ========================================================================
+    // Event Generation Tests
+    // ========================================================================
+    console.log('\n📡 Testing Event Generation...');
+    
+    const initialEventCount = events.length;
+    generateEvent(1, SEVERITY.INFO, 'Test event');
+    assert(events.length === initialEventCount + 1, 'Event generation adds to events array');
+    assert(events[0].message === 'Test event', 'Event message is correctly stored');
+    assert(events[0].severity === SEVERITY.INFO, 'Event severity is correctly stored');
+
+    // ========================================================================
+    // Downtime Calculation Tests
+    // ========================================================================
+    console.log('\n⏱️ Testing Downtime Calculation...');
+    
     const initialDowntime = downtimeMinutesToday;
-    addDowntimeEntry(1, 'Test', 'Notes', Date.now() - 60000, Date.now());
+    addDowntimeEntry(1, 'Test', 'Notes', Date.now() - TIME.MS_PER_MINUTE, Date.now());
     updateMetrics();
-    console.assert(downtimeMinutesToday > initialDowntime, 'Downtime calculation failed');
+    assert(downtimeMinutesToday > initialDowntime, 'Downtime calculation updates metrics');
 
-    // Test checklist persistence
+    // ========================================================================
+    // Checklist Persistence Tests
+    // ========================================================================
+    console.log('\n💾 Testing Checklist Persistence...');
+    
     const originalChecked = commissioningChecklist.Safety[0].checked;
     commissioningChecklist.Safety[0].checked = !originalChecked;
     saveChecklistToLocalStorage();
     loadChecklistFromLocalStorage();
-    console.assert(commissioningChecklist.Safety[0].checked === !originalChecked, 'Checklist persistence failed');
+    assert(commissioningChecklist.Safety[0].checked === !originalChecked, 'Checklist persistence round-trips correctly');
 
-    // Test simulation start/stop
-    console.assert(typeof startSimulation === 'function', 'startSimulation should be a function');
-    console.assert(typeof stopSimulation === 'function', 'stopSimulation should be a function');
+    // ========================================================================
+    // Simulation Tests
+    // ========================================================================
+    console.log('\n🎮 Testing Simulation Functions...');
+    
+    assert(typeof startSimulation === 'function', 'startSimulation function exists');
+    assert(typeof stopSimulation === 'function', 'stopSimulation function exists');
 
-    // Test renderHelp function exists and returns content
-    console.assert(typeof renderHelp === 'function', 'renderHelp should be a function');
+    // ========================================================================
+    // View Rendering Tests
+    // ========================================================================
+    console.log('\n🖼️ Testing View Rendering...');
+    
+    assert(typeof renderHelp === 'function', 'renderHelp function exists');
     const helpContent = renderHelp();
-    console.assert(helpContent.includes('User Manual'), 'renderHelp should include User Manual title');
-    console.assert(helpContent.includes('SCADA'), 'renderHelp should explain SCADA terminology');
+    assert(helpContent.includes('User Manual'), 'renderHelp includes User Manual title');
+    assert(helpContent.includes('SCADA'), 'renderHelp explains SCADA terminology');
 
-    // Test validateChecklistJSON function
-    console.assert(typeof validateChecklistJSON === 'function', 'validateChecklistJSON should be a function');
+    // ========================================================================
+    // Validation Tests
+    // ========================================================================
+    console.log('\n✅ Testing Validation Functions...');
+    
+    assert(typeof validateChecklistJSON === 'function', 'validateChecklistJSON function exists');
     
     // Test valid structure
     const validData = {
@@ -46,22 +113,33 @@ if (window.location.search.includes('test=1')) {
         Handoff: [{ item: 'Test', checked: false }]
     };
     const validResult = validateChecklistJSON(validData);
-    console.assert(validResult.valid === true, 'Valid checklist should pass validation');
+    assert(validResult.valid === true, 'Valid checklist passes validation');
     
     // Test invalid: not an object
     const invalidNotObject = validateChecklistJSON('string');
-    console.assert(invalidNotObject.valid === false, 'String should fail validation');
+    assert(invalidNotObject.valid === false, 'String input fails validation');
     
     // Test invalid: missing section
     const invalidMissing = validateChecklistJSON({ Safety: [] });
-    console.assert(invalidMissing.valid === false, 'Missing sections should fail');
+    assert(invalidMissing.valid === false, 'Missing sections fail validation');
     
     // Test invalid: wrong item structure
     const invalidItem = validateChecklistJSON({
         Safety: [{ item: 'Test', checked: 'yes' }], // checked should be boolean
         IO: [], Network: [], Sensors: [], Throughput: [], Handoff: []
     });
-    console.assert(invalidItem.valid === false, 'Invalid item structure should fail');
+    assert(invalidItem.valid === false, 'Invalid item structure fails validation');
 
-    console.log('Self-tests completed.');
+    // ========================================================================
+    // Test Summary
+    // ========================================================================
+    console.log('\n' + '='.repeat(50));
+    console.log(`🧪 TEST RESULTS: ${passCount} passed, ${failCount} failed`);
+    console.log('='.repeat(50));
+    
+    if (failCount === 0) {
+        console.log('🎉 All tests passed!');
+    } else {
+        console.warn(`⚠️ ${failCount} test(s) failed - review above for details`);
+    }
 }

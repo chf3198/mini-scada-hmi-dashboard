@@ -1,54 +1,97 @@
-// Main app logic
-console.log('App.js loaded at', new Date());
+'use strict';
 
-let currentView = 'overview';
+/**
+ * @module app
+ * @description Main application logic for the Mini SCADA HMI Dashboard.
+ * Handles routing, view rendering, and user interactions.
+ * @requires config/constants
+ * @requires data
+ * @requires utils
+ * @author Mini SCADA HMI Team
+ * @license MIT
+ */
+
+// ============================================================================
+// APPLICATION STATE
+// ============================================================================
+
+/** @type {string} Currently active view */
+let currentView = VIEWS.OVERVIEW;
+
+/** @type {Chart|null} Chart.js instance for downtime chart */
 let downtimeChartInstance = null;
+
+/** @type {Chart|null} Chart.js instance for events chart */
 let eventsChartInstance = null;
 
+// ============================================================================
+// CORE RENDERING
+// ============================================================================
+
+/**
+ * Renders the current view based on the currentView state.
+ * Handles view switching, icon initialization, and tooltip setup.
+ * @sideeffect Updates DOM, initializes Lucide icons and Tippy tooltips
+ */
 function renderCurrentView() {
-    console.log('Rendering view:', currentView);
     const content = document.getElementById('content');
-    console.log('Content element:', content);
     if (!content) {
         console.error('Content element not found');
         return;
     }
+    
     switch (currentView) {
-        case 'overview':
+        case VIEWS.OVERVIEW:
             content.innerHTML = renderOverview();
-            setTimeout(renderCharts, 50);
+            setTimeout(renderCharts, TIME.CHART_RENDER_DELAY_MS);
             break;
-        case 'machine':
+        case VIEWS.MACHINE:
             content.innerHTML = renderMachineDetail(window.location.hash.split('/')[2]);
             break;
-        case 'runbooks':
+        case VIEWS.RUNBOOKS:
             content.innerHTML = renderRunbooks();
             break;
-        case 'commissioning':
+        case VIEWS.COMMISSIONING:
             content.innerHTML = renderCommissioning();
             break;
-        case 'help':
+        case VIEWS.HELP:
             content.innerHTML = renderHelp();
             break;
         default:
             content.innerHTML = renderOverview();
-            setTimeout(renderCharts, 50);
+            setTimeout(renderCharts, TIME.CHART_RENDER_DELAY_MS);
     }
-    console.log('InnerHTML set for view:', currentView);
-    // Re-initialize Lucide icons
+    
+    // Re-initialize Lucide icons for new content
     lucide.createIcons();
+    
     // Re-initialize tooltips for new elements
     if (typeof tippy !== 'undefined') {
-        tippy('[data-tippy-content]', { theme: 'light-border', placement: 'bottom', delay: [200, 0] });
+        tippy('[data-tippy-content]', { 
+            theme: 'light-border', 
+            placement: 'bottom', 
+            delay: [200, 0] 
+        });
     }
+    
     // Update navigation highlight
     updateNavHighlight();
 }
 
-// Highlight active navigation link
+// ============================================================================
+// NAVIGATION
+// ============================================================================
+
+/**
+ * Updates navigation link highlighting based on current view.
+ * Machine detail view highlights Overview as its parent.
+ * @sideeffect Modifies CSS classes on navigation elements
+ */
 function updateNavHighlight() {
     const navLinks = document.querySelectorAll('[data-route]');
-    const activeRoute = currentView === 'machine' ? 'overview' : currentView; // Machine detail shows Overview as active
+    // Machine detail shows Overview as active (parent view)
+    const activeRoute = currentView === VIEWS.MACHINE ? VIEWS.OVERVIEW : currentView;
+    
     navLinks.forEach(link => {
         const route = link.getAttribute('data-route');
         if (route === activeRoute) {
@@ -61,18 +104,27 @@ function updateNavHighlight() {
     });
 }
 
+// ============================================================================
+// OVERVIEW VIEW
+// ============================================================================
+
+/**
+ * Renders the overview dashboard with machine cards, metrics, and charts.
+ * @returns {string} HTML string for the overview view
+ */
 function renderOverview() {
     updateMetrics();
-    const machineCards = machines.map(m => `
+    
+    const machineCards = machines.map(machine => `
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow" data-tippy-content="Equipment asset card showing real-time status from PLC/RTU data">
-            <h3 class="text-lg font-bold">${m.name}</h3>
+            <h3 class="text-lg font-bold">${machine.name}</h3>
             <div class="flex items-center mt-2" data-tippy-content="RUN=producing, IDLE=standby, DOWN=faulted or stopped">
-                <div class="w-4 h-4 rounded-full ${getStatusColor(m.status)} mr-2"></div>
-                <span>${m.status}</span>
+                <div class="w-4 h-4 rounded-full ${getStatusColor(machine.status)} mr-2"></div>
+                <span>${machine.status}</span>
             </div>
-            <p data-tippy-content="Overall Equipment Effectiveness (OEE) health indicator derived from availability, performance, and quality">Health: ${m.healthScore}%</p>
-            <p data-tippy-content="Time since last heartbeat signal from the machine's PLC or controller - monitors communication health">Last HB: ${Math.floor((Date.now() - m.lastHeartbeat) / 1000)}s ago</p>
-            <a href="#/machine/${m.id}" class="text-blue-600 hover:underline" data-tippy-content="View detailed event log, downtime entries, and diagnostic data for this machine">Details</a>
+            <p data-tippy-content="Overall Equipment Effectiveness (OEE) health indicator derived from availability, performance, and quality">Health: ${machine.healthScore}%</p>
+            <p data-tippy-content="Time since last heartbeat signal from the machine's PLC or controller - monitors communication health">Last HB: ${Math.floor((Date.now() - machine.lastHeartbeat) / 1000)}s ago</p>
+            <a href="#/machine/${machine.id}" class="text-blue-600 hover:underline" data-tippy-content="View detailed event log, downtime entries, and diagnostic data for this machine">Details</a>
         </div>
     `).join('');
 
@@ -115,29 +167,43 @@ function renderOverview() {
     `;
 }
 
+// ============================================================================
+// MACHINE DETAIL VIEW
+// ============================================================================
+
+/**
+ * Renders detailed view for a specific machine with events and downtime.
+ * @param {string} machineId - The machine ID from the route parameter
+ * @returns {string} HTML string for the machine detail view
+ */
 function renderMachineDetail(machineId) {
-    const id = parseInt(machineId);
-    const machine = machines.find(m => m.id === id);
+    const parsedMachineId = parseInt(machineId);
+    const machine = machines.find(targetMachine => targetMachine.id === parsedMachineId);
     if (!machine) return '<p>Machine not found</p>';
 
-    const machineEvents = events.filter(e => e.machineId === id).slice(0, 20);
-    const eventRows = machineEvents.map(e => `
-        <tr class="${e.acknowledged ? 'opacity-50' : ''}">
-            <td>${formatTime(e.timestamp)}</td>
-            <td class="${getSeverityColor(e.severity)}">${e.severity}</td>
-            <td>${e.message}</td>
-            <td>${e.acknowledged ? 'Yes' : `<button onclick="acknowledgeAlarm(${e.id})" class="text-blue-600">Ack</button>`}</td>
+    const machineEvents = events
+        .filter(eventEntry => eventEntry.machineId === parsedMachineId)
+        .slice(0, 20);
+    
+    const eventRows = machineEvents.map(eventEntry => `
+        <tr class="${eventEntry.acknowledged ? 'opacity-50' : ''}">
+            <td>${formatTime(eventEntry.timestamp)}</td>
+            <td class="${getSeverityColor(eventEntry.severity)}">${eventEntry.severity}</td>
+            <td>${eventEntry.message}</td>
+            <td>${eventEntry.acknowledged ? 'Yes' : `<button onclick="acknowledgeAlarm(${eventEntry.id})" class="text-blue-600">Ack</button>`}</td>
         </tr>
     `).join('');
 
-    const downtimeRows = downtimeEntries.filter(d => d.machineId === id).map(d => `
-        <tr>
-            <td>${formatTime(d.start)}</td>
-            <td>${formatTime(d.end)}</td>
-            <td>${d.reason}</td>
-            <td>${d.notes}</td>
-        </tr>
-    `).join('');
+    const downtimeRows = downtimeEntries
+        .filter(downtimeEntry => downtimeEntry.machineId === parsedMachineId)
+        .map(downtimeEntry => `
+            <tr>
+                <td>${formatTime(downtimeEntry.start)}</td>
+                <td>${formatTime(downtimeEntry.end)}</td>
+                <td>${downtimeEntry.reason}</td>
+                <td>${downtimeEntry.notes}</td>
+            </tr>
+        `).join('');
 
     return `
         <h2 class="text-2xl font-bold mb-4" data-tippy-content="Detailed view of individual equipment asset - drill-down from overview for diagnostics and maintenance">${machine.name} Details</h2>
@@ -196,23 +262,31 @@ function renderMachineDetail(machineId) {
     `;
 }
 
+// ============================================================================
+// RUNBOOKS VIEW
+// ============================================================================
+
+/**
+ * Renders the runbooks page with searchable procedure list.
+ * @returns {string} HTML string for the runbooks view
+ */
 function renderRunbooks() {
-    const runbookList = runbooks.map(r => `
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 overflow-hidden" data-runbook="${r.code}" data-tippy-content="Standard Operating Procedure for handling specific alarm or fault conditions">
-            <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="showRunbook('${r.code}')">
+    const runbookList = runbooks.map(runbook => `
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 overflow-hidden" data-runbook="${runbook.code}" data-tippy-content="Standard Operating Procedure for handling specific alarm or fault conditions">
+            <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="showRunbook('${runbook.code}')">
                 <div>
-                    <span class="inline-block px-2 py-1 text-xs font-mono font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mr-2">${r.code}</span>
-                    <span class="text-lg font-semibold">${r.title}</span>
+                    <span class="inline-block px-2 py-1 text-xs font-mono font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mr-2">${runbook.code}</span>
+                    <span class="text-lg font-semibold">${runbook.title}</span>
                 </div>
-                <span class="text-gray-400 text-xl" id="chevron-${r.code}">▶</span>
+                <span class="text-gray-400 text-xl" id="chevron-${runbook.code}">▶</span>
             </div>
-            <div id="detail-${r.code}" class="hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
+            <div id="detail-${runbook.code}" class="hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
                 <div class="flex items-start gap-3">
                     <div class="flex-shrink-0 w-1 bg-blue-500 rounded self-stretch"></div>
                     <div>
                         <h4 class="font-bold text-gray-700 dark:text-gray-300 mb-3">📋 Procedure Steps:</h4>
                         <ol class="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-400">
-                            ${r.steps.map(s => `<li class="pl-2">${s}</li>`).join('')}
+                            ${runbook.steps.map(step => `<li class="pl-2">${step}</li>`).join('')}
                         </ol>
                     </div>
                 </div>
@@ -227,53 +301,45 @@ function renderRunbooks() {
     `;
 }
 
+// ============================================================================
+// COMMISSIONING VIEW
+// ============================================================================
+
+/**
+ * Renders the commissioning checklist with progress tracking.
+ * Uses constants for section icons and tooltips.
+ * @returns {string} HTML string for the commissioning view
+ */
 function renderCommissioning() {
-    const sectionIcons = {
-        Safety: '🛡️',
-        IO: '🔌',
-        Network: '🌐',
-        Sensors: '📡',
-        Throughput: '📊',
-        Handoff: '🤝'
-    };
-    const sectionTooltips = {
-        Safety: 'Verify all safety systems including E-stops, guards, and interlocks are functioning properly',
-        IO: 'Validate all input/output signals between PLC and field devices are correctly wired and configured',
-        Network: 'Confirm network connectivity between all system components including PLCs, HMIs, and SCADA servers',
-        Sensors: 'Calibrate and verify accuracy of all sensors including temperature, pressure, and position',
-        Throughput: 'Validate production rate meets design specifications under normal operating conditions',
-        Handoff: 'Complete all documentation and training before transferring system to operations team'
-    };
-    
     // Calculate overall progress
     let totalItems = 0;
     let checkedItems = 0;
-    Object.values(commissioningChecklist).forEach(items => {
-        totalItems += items.length;
-        checkedItems += items.filter(i => i.checked).length;
+    Object.values(commissioningChecklist).forEach(sectionItems => {
+        totalItems += sectionItems.length;
+        checkedItems += sectionItems.filter(checklistItem => checklistItem.checked).length;
     });
     const overallProgress = totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0;
     
     const sections = Object.keys(commissioningChecklist).map(section => {
         const sectionItems = commissioningChecklist[section];
-        const sectionChecked = sectionItems.filter(i => i.checked).length;
+        const sectionChecked = sectionItems.filter(checklistItem => checklistItem.checked).length;
         const sectionTotal = sectionItems.length;
         const sectionProgress = sectionTotal > 0 ? Math.round((sectionChecked / sectionTotal) * 100) : 0;
         const isComplete = sectionProgress === 100;
         
-        const items = sectionItems.map(item => `
-            <label class="flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${item.checked ? 'bg-green-50 dark:bg-green-900/20' : ''}">
-                <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleChecklist('${section}', '${item.item}')" class="w-5 h-5 mr-3 accent-green-600" data-tippy-content="Check when this item has been verified and documented">
-                <span class="${item.checked ? 'line-through text-gray-400' : ''}">${item.item}</span>
-                ${item.checked ? '<span class="ml-auto text-green-600">✓</span>' : ''}
+        const items = sectionItems.map(checklistItem => `
+            <label class="flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${checklistItem.checked ? 'bg-green-50 dark:bg-green-900/20' : ''}">
+                <input type="checkbox" ${checklistItem.checked ? 'checked' : ''} onchange="toggleChecklist('${section}', '${checklistItem.item}')" class="w-5 h-5 mr-3 accent-green-600" data-tippy-content="Check when this item has been verified and documented">
+                <span class="${checklistItem.checked ? 'line-through text-gray-400' : ''}">${checklistItem.item}</span>
+                ${checklistItem.checked ? '<span class="ml-auto text-green-600">✓</span>' : ''}
             </label>
         `).join('');
         
         return `
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-4" data-tippy-content="${sectionTooltips[section] || 'Commissioning section'}">
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden mb-4" data-tippy-content="${SECTION_TOOLTIPS[section] || 'Commissioning section'}">
                 <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between ${isComplete ? 'bg-green-50 dark:bg-green-900/30' : ''}">
                     <div class="flex items-center gap-3">
-                        <span class="text-2xl">${sectionIcons[section] || '📋'}</span>
+                        <span class="text-2xl">${SECTION_ICONS[section] || '📋'}</span>
                         <div>
                             <h3 class="text-lg font-bold">${section}</h3>
                             <span class="text-sm text-gray-500">${sectionChecked}/${sectionTotal} complete</span>
@@ -333,7 +399,15 @@ function renderCommissioning() {
     `;
 }
 
-// Help / User Manual view
+// ============================================================================
+// HELP VIEW
+// ============================================================================
+
+/**
+ * Renders the user manual / help page.
+ * Static content explaining SCADA concepts and application usage.
+ * @returns {string} HTML string for the help view
+ */
 function renderHelp() {
     return `
         <div class="max-w-4xl mx-auto">
@@ -485,9 +559,19 @@ function renderHelp() {
     `;
 }
 
-function addDowntime(event, machineId) {
-    event.preventDefault();
-    const form = event.target;
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Handles downtime form submission for a machine.
+ * @param {Event} formEvent - The form submit event
+ * @param {number} machineId - The machine ID to add downtime for
+ * @sideeffect Adds downtime entry, resets form, re-renders view
+ */
+function addDowntime(formEvent, machineId) {
+    formEvent.preventDefault();
+    const form = formEvent.target;
     const reason = form.reason.value;
     const notes = form.notes.value;
     const start = form.start.value;
@@ -497,51 +581,68 @@ function addDowntime(event, machineId) {
     renderCurrentView();
 }
 
-function showRunbook(code) {
-    const runbook = runbooks.find(r => r.code === code);
+/**
+ * Toggles visibility of a runbook's procedure steps.
+ * Closes all other open runbooks for accordion behavior.
+ * @param {string} runbookCode - The runbook code to toggle (e.g., 'ALRM-001')
+ * @sideeffect Modifies DOM classes for visibility
+ */
+function showRunbook(runbookCode) {
+    const runbook = runbooks.find(targetRunbook => targetRunbook.code === runbookCode);
     if (!runbook) return;
     
-    // Close all other open runbooks
-    runbooks.forEach(r => {
-        if (r.code !== code) {
-            const otherDetail = document.getElementById(`detail-${r.code}`);
-            const otherChevron = document.getElementById(`chevron-${r.code}`);
+    // Close all other open runbooks (accordion behavior)
+    runbooks.forEach(otherRunbook => {
+        if (otherRunbook.code !== runbookCode) {
+            const otherDetail = document.getElementById(`detail-${otherRunbook.code}`);
+            const otherChevron = document.getElementById(`chevron-${otherRunbook.code}`);
             if (otherDetail) otherDetail.classList.add('hidden');
             if (otherChevron) otherChevron.textContent = '▶';
         }
     });
     
     // Toggle the clicked runbook
-    const detail = document.getElementById(`detail-${code}`);
-    const chevron = document.getElementById(`chevron-${code}`);
-    if (detail.classList.contains('hidden')) {
-        detail.classList.remove('hidden');
-        chevron.textContent = '▼';
+    const detailElement = document.getElementById(`detail-${runbookCode}`);
+    const chevronElement = document.getElementById(`chevron-${runbookCode}`);
+    if (detailElement.classList.contains('hidden')) {
+        detailElement.classList.remove('hidden');
+        chevronElement.textContent = '▼';
     } else {
-        detail.classList.add('hidden');
-        chevron.textContent = '▶';
+        detailElement.classList.add('hidden');
+        chevronElement.textContent = '▶';
     }
 }
 
+/**
+ * Filters the runbook list based on search input.
+ * Matches against runbook code or title (case-insensitive).
+ * @sideeffect Re-renders the runbook list in the DOM
+ */
 function filterRunbooks() {
-    const query = document.getElementById('runbook-search').value.toLowerCase();
-    const list = document.getElementById('runbook-list');
-    list.innerHTML = runbooks.filter(r => r.code.toLowerCase().includes(query) || r.title.toLowerCase().includes(query)).map(r => `
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 overflow-hidden" data-runbook="${r.code}">
-            <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="showRunbook('${r.code}')">
+    const searchQuery = document.getElementById('runbook-search').value.toLowerCase();
+    const listContainer = document.getElementById('runbook-list');
+    
+    const filteredRunbooks = runbooks.filter(runbook => 
+        runbook.code.toLowerCase().includes(searchQuery) || 
+        runbook.title.toLowerCase().includes(searchQuery)
+    );
+    
+    listContainer.innerHTML = filteredRunbooks.map(runbook => `
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 overflow-hidden" data-runbook="${runbook.code}">
+            <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="showRunbook('${runbook.code}')">
                 <div>
-                    <span class="inline-block px-2 py-1 text-xs font-mono font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mr-2">${r.code}</span>
-                    <span class="text-lg font-semibold">${r.title}</span>
+                    <span class="inline-block px-2 py-1 text-xs font-mono font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mr-2">${runbook.code}</span>
+                    <span class="text-lg font-semibold">${runbook.title}</span>
                 </div>
-                <span class="text-gray-400 text-xl" id="chevron-${r.code}">▶</span>
+                <span class="text-gray-400 text-xl" id="chevron-${runbook.code}">▶</span>
             </div>
-            <div id="detail-${r.code}" class="hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
+            <div id="detail-${runbook.code}" class="hidden border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4">
                 <div class="flex items-start gap-3">
                     <div class="flex-shrink-0 w-1 bg-blue-500 rounded self-stretch"></div>
                     <div>
                         <h4 class="font-bold text-gray-700 dark:text-gray-300 mb-3">📋 Procedure Steps:</h4>
                         <ol class="list-decimal list-inside space-y-2 text-gray-600 dark:text-gray-400">
-                            ${r.steps.map(s => `<li class="pl-2">${s}</li>`).join('')}
+                            ${runbook.steps.map(step => `<li class="pl-2">${step}</li>`).join('')}
                         </ol>
                     </div>
                 </div>
@@ -550,43 +651,74 @@ function filterRunbooks() {
     `).join('');
 }
 
-function toggleChecklist(section, item) {
-    const checklistItem = commissioningChecklist[section].find(i => i.item === item);
+/**
+ * Toggles a checklist item's checked state and persists to localStorage.
+ * @param {string} section - The checklist section name (e.g., 'Safety')
+ * @param {string} itemName - The checklist item text to toggle
+ * @sideeffect Modifies commissioningChecklist, persists to localStorage
+ */
+function toggleChecklist(section, itemName) {
+    const checklistItem = commissioningChecklist[section].find(
+        targetItem => targetItem.item === itemName
+    );
     if (checklistItem) {
         checklistItem.checked = !checklistItem.checked;
         saveChecklistToLocalStorage();
     }
 }
 
-// Dark mode toggle
+// ============================================================================
+// EVENT LISTENERS
+// ============================================================================
+
+/**
+ * Dark mode toggle button handler.
+ * Toggles the 'dark' class on the document root and updates button icon.
+ */
 document.getElementById('dark-mode-toggle').addEventListener('click', () => {
     document.documentElement.classList.toggle('dark');
-    const toggle = document.getElementById('dark-mode-toggle');
-    toggle.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+    const toggleButton = document.getElementById('dark-mode-toggle');
+    toggleButton.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
 });
 
-// Routing
+/**
+ * Hash-based routing handler.
+ * Parses the URL hash and updates the current view accordingly.
+ */
 window.addEventListener('hashchange', () => {
     const hash = window.location.hash;
     if (hash.startsWith('#/machine/')) {
-        currentView = 'machine';
+        currentView = VIEWS.MACHINE;
     } else if (hash === '#/runbooks') {
-        currentView = 'runbooks';
+        currentView = VIEWS.RUNBOOKS;
     } else if (hash === '#/commissioning') {
-        currentView = 'commissioning';
+        currentView = VIEWS.COMMISSIONING;
     } else if (hash === '#/help') {
-        currentView = 'help';
+        currentView = VIEWS.HELP;
     } else {
-        currentView = 'overview';
+        currentView = VIEWS.OVERVIEW;
     }
     renderCurrentView();
 });
 
-// Initial render
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+// Initial render on page load
 renderCurrentView();
 
+// ============================================================================
+// CHART RENDERING
+// ============================================================================
+
+/**
+ * Renders Chart.js charts for downtime and event severity.
+ * Destroys existing chart instances before creating new ones.
+ * @sideeffect Creates/replaces chart instances on canvas elements
+ */
 function renderCharts() {
-    // Destroy existing charts to prevent duplicates
+    // Destroy existing charts to prevent memory leaks and duplicates
     if (downtimeChartInstance) {
         downtimeChartInstance.destroy();
     }
@@ -594,21 +726,27 @@ function renderCharts() {
         eventsChartInstance.destroy();
     }
 
-    // Downtime chart
+    // Downtime by machine bar chart
     const downtimeCanvas = document.getElementById('downtimeChart');
     if (!downtimeCanvas) return;
-    const downtimeCtx = downtimeCanvas.getContext('2d');
-    const downtimeData = machines.map(m => {
-        const total = downtimeEntries.filter(d => d.machineId === m.id).reduce((sum, d) => sum + (d.end - d.start) / 60000, 0);
-        return total;
+    
+    const downtimeContext = downtimeCanvas.getContext('2d');
+    const downtimeByMachine = machines.map(machine => {
+        const machineDowntime = downtimeEntries
+            .filter(entry => entry.machineId === machine.id)
+            .reduce((totalMinutes, entry) => 
+                totalMinutes + (entry.end - entry.start) / TIME.MS_PER_MINUTE, 0
+            );
+        return machineDowntime;
     });
-    downtimeChartInstance = new Chart(downtimeCtx, {
+    
+    downtimeChartInstance = new Chart(downtimeContext, {
         type: 'bar',
         data: {
-            labels: machines.map(m => m.name),
+            labels: machines.map(machine => machine.name),
             datasets: [{
                 label: 'Downtime (min)',
-                data: downtimeData,
+                data: downtimeByMachine,
                 backgroundColor: 'rgba(255, 99, 132, 0.2)',
                 borderColor: 'rgba(255, 99, 132, 1)',
                 borderWidth: 1
@@ -616,13 +754,19 @@ function renderCharts() {
         }
     });
 
-    // Events chart
+    // Events by severity pie chart
     const eventsCanvas = document.getElementById('eventsChart');
     if (!eventsCanvas) return;
-    const eventsCtx = eventsCanvas.getContext('2d');
-    const severityCounts = { INFO: 0, WARN: 0, ALARM: 0 };
-    events.forEach(e => severityCounts[e.severity]++);
-    eventsChartInstance = new Chart(eventsCtx, {
+    
+    const eventsContext = eventsCanvas.getContext('2d');
+    const severityCounts = { 
+        [SEVERITY.INFO]: 0, 
+        [SEVERITY.WARNING]: 0, 
+        [SEVERITY.ALARM]: 0 
+    };
+    events.forEach(eventEntry => severityCounts[eventEntry.severity]++);
+    
+    eventsChartInstance = new Chart(eventsContext, {
         type: 'pie',
         data: {
             labels: Object.keys(severityCounts),
