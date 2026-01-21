@@ -566,7 +566,7 @@ function templateProgressCard(checkedItems, totalItems) {
  */
 function templateCommissioningActions() {
     return `
-        <div class="flex gap-3 mt-6">
+        <div class="flex flex-wrap gap-3 mt-6">
             <button onclick="exportChecklist()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Download checklist as JSON file for documentation and audit trail">
                 <span>📤</span> Export to JSON
             </button>
@@ -574,6 +574,9 @@ function templateCommissioningActions() {
                 <span>📥</span> Import from JSON
             </button>
             <input type="file" id="import-file" accept=".json" onchange="importChecklist(event)" class="hidden">
+            <button onclick="resetChecklist()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors" data-tippy-content="Reset all checklist items to unchecked - use with caution!">
+                <span>🔄</span> Reset All
+            </button>
         </div>
     `;
 }

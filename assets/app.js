@@ -227,9 +227,6 @@ function renderCommissioning() {
         ${sections}
         
         ${templateCommissioningActions()}
-        <button onclick="resetChecklist()" class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors ml-3" data-tippy-content="Reset all checklist items to unchecked - use with caution!">
-            <span>🔄</span> Reset All
-        </button>
         
         <div id="import-status" class="mt-4 hidden"></div>
     `;
