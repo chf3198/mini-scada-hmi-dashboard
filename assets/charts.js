@@ -27,80 +27,137 @@ let eventsChartInstance = null;
 /**
  * Renders Chart.js charts for downtime and event severity.
  * Destroys existing chart instances before creating new ones.
+ * Includes error handling for missing elements or Chart.js failures.
  * @sideeffect Creates/replaces chart instances on canvas elements
  */
 function renderCharts() {
-    // Destroy existing charts to prevent memory leaks and duplicates
-    if (downtimeChartInstance) {
-        downtimeChartInstance.destroy();
+    try {
+        // Destroy existing charts to prevent memory leaks and duplicates
+        destroyCharts();
+        
+        // Use requestAnimationFrame for smoother rendering
+        requestAnimationFrame(() => {
+            renderDowntimeChart();
+            renderEventsChart();
+        });
+    } catch (error) {
+        console.error('Error rendering charts:', error);
     }
-    if (eventsChartInstance) {
-        eventsChartInstance.destroy();
-    }
-
-    renderDowntimeChart();
-    renderEventsChart();
 }
 
 /**
  * Renders the downtime by machine bar chart.
+ * Includes error handling and accessibility labels.
  * @sideeffect Creates downtimeChartInstance on canvas element
  */
 function renderDowntimeChart() {
-    const downtimeCanvas = document.getElementById('downtimeChart');
-    if (!downtimeCanvas) return;
-    
-    const downtimeContext = downtimeCanvas.getContext('2d');
-    const downtimeByMachine = machines.map(machine => {
-        const machineDowntime = downtimeEntries
-            .filter(entry => entry.machineId === machine.id)
-            .reduce((totalMinutes, entry) => 
-                totalMinutes + (entry.end - entry.start) / TIME.MS_PER_MINUTE, 0
-            );
-        return machineDowntime;
-    });
-    
-    downtimeChartInstance = new Chart(downtimeContext, {
-        type: 'bar',
-        data: {
-            labels: machines.map(machine => machine.name),
-            datasets: [{
-                label: 'Downtime (min)',
-                data: downtimeByMachine,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
+    try {
+        const downtimeCanvas = document.getElementById('downtimeChart');
+        if (!downtimeCanvas) return;
+        
+        const downtimeContext = downtimeCanvas.getContext('2d');
+        if (!downtimeContext) {
+            console.error('Could not get 2D context for downtime chart');
+            return;
         }
-    });
+        
+        const downtimeByMachine = machines.map(machine => {
+            const machineDowntime = downtimeEntries
+                .filter(entry => entry.machineId === machine.id)
+                .reduce((totalMinutes, entry) => 
+                    totalMinutes + (entry.end - entry.start) / TIME.MS_PER_MINUTE, 0
+                );
+            return machineDowntime;
+        });
+        
+        downtimeChartInstance = new Chart(downtimeContext, {
+            type: 'bar',
+            data: {
+                labels: machines.map(machine => machine.name),
+                datasets: [{
+                    label: 'Downtime (min)',
+                    data: downtimeByMachine,
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    title: {
+                        display: false,
+                        text: 'Machine Downtime in Minutes'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Minutes'
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Set accessible label for canvas
+        downtimeCanvas.setAttribute('aria-label', 'Bar chart showing downtime in minutes for each machine');
+        downtimeCanvas.setAttribute('role', 'img');
+        
+    } catch (error) {
+        console.error('Error rendering downtime chart:', error);
+    }
 }
 
 /**
  * Renders the events by severity pie chart.
+ * Includes error handling and accessibility labels.
  * @sideeffect Creates eventsChartInstance on canvas element
  */
 function renderEventsChart() {
-    const eventsCanvas = document.getElementById('eventsChart');
-    if (!eventsCanvas) return;
-    
-    const eventsContext = eventsCanvas.getContext('2d');
-    const severityCounts = { 
-        [SEVERITY.INFO]: 0, 
-        [SEVERITY.WARNING]: 0, 
-        [SEVERITY.ALARM]: 0 
-    };
-    events.forEach(eventEntry => severityCounts[eventEntry.severity]++);
-    
-    eventsChartInstance = new Chart(eventsContext, {
-        type: 'pie',
-        data: {
-            labels: Object.keys(severityCounts),
-            datasets: [{
-                data: Object.values(severityCounts),
-                backgroundColor: ['#3B82F6', '#F59E0B', '#EF4444']
-            }]
+    try {
+        const eventsCanvas = document.getElementById('eventsChart');
+        if (!eventsCanvas) return;
+        
+        const eventsContext = eventsCanvas.getContext('2d');
+        if (!eventsContext) {
+            console.error('Could not get 2D context for events chart');
+            return;
         }
-    });
+        
+        const severityCounts = { 
+            [SEVERITY.INFO]: 0, 
+            [SEVERITY.WARNING]: 0, 
+            [SEVERITY.ALARM]: 0 
+        };
+        events.forEach(eventEntry => severityCounts[eventEntry.severity]++);
+        
+        eventsChartInstance = new Chart(eventsContext, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(severityCounts),
+                datasets: [{
+                    data: Object.values(severityCounts),
+                    backgroundColor: ['#3B82F6', '#F59E0B', '#EF4444']
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        
+        // Set accessible label for canvas
+        eventsCanvas.setAttribute('aria-label', 'Pie chart showing event distribution by severity level');
+        eventsCanvas.setAttribute('role', 'img');
+        
+    } catch (error) {
+        console.error('Error rendering events chart:', error);
+    }
 }
 
 /**

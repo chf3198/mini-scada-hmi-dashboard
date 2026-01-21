@@ -168,6 +168,66 @@ if (window.location.search.includes('test=1')) {
     assert(invalidItem.valid === false, 'Invalid item structure fails validation');
 
     // ========================================================================
+    // Security & Sanitization Tests (Phase 4)
+    // ========================================================================
+    console.log('\n🔒 Testing Security Functions...');
+    
+    // Test escapeHtml
+    assert(typeof escapeHtml === 'function', 'escapeHtml function exists');
+    const xssAttempt = '<script>alert("XSS")</script>';
+    const escapedXss = escapeHtml(xssAttempt);
+    assert(!escapedXss.includes('<script>'), 'escapeHtml neutralizes script tags');
+    assert(escapedXss.includes('&lt;'), 'escapeHtml converts < to entity');
+    assert(escapedXss.includes('&gt;'), 'escapeHtml converts > to entity');
+    
+    // Test sanitizeInput
+    assert(typeof sanitizeInput === 'function', 'sanitizeInput function exists');
+    const htmlInput = '<b>Bold</b> text';
+    const sanitized = sanitizeInput(htmlInput);
+    assert(!sanitized.includes('<'), 'sanitizeInput removes HTML tags');
+    assert(sanitized.includes('Bold'), 'sanitizeInput preserves text content');
+    
+    // Test validateMachineId
+    assert(typeof validateMachineId === 'function', 'validateMachineId function exists');
+    assert(validateMachineId(1) === 1, 'validateMachineId accepts valid number');
+    assert(validateMachineId('2') === 2, 'validateMachineId parses valid string');
+    assert(validateMachineId('abc') === null, 'validateMachineId rejects non-numeric');
+    assert(validateMachineId(-5) === null, 'validateMachineId rejects negative');
+    assert(validateMachineId(5000) === null, 'validateMachineId rejects out of range');
+    
+    // Test safeJsonParse
+    assert(typeof safeJsonParse === 'function', 'safeJsonParse function exists');
+    const validJson = '{"key": "value"}';
+    const parsedValid = safeJsonParse(validJson);
+    assert(parsedValid !== null && parsedValid.key === 'value', 'safeJsonParse parses valid JSON');
+    const invalidJson = '{not valid json}';
+    const parsedInvalid = safeJsonParse(invalidJson, {});
+    assert(typeof parsedInvalid === 'object', 'safeJsonParse returns default on invalid JSON');
+
+    // ========================================================================
+    // Accessibility Tests (Phase 4)
+    // ========================================================================
+    console.log('\n♿ Testing Accessibility...');
+    
+    // Test ARIA landmarks
+    const mainContent = document.getElementById('main-content');
+    assert(mainContent !== null, 'Main content landmark exists');
+    assert(mainContent && mainContent.getAttribute('role') === 'main', 'Main content has role="main"');
+    
+    const nav = document.querySelector('nav');
+    assert(nav !== null, 'Navigation element exists');
+    assert(nav && nav.getAttribute('role') === 'navigation', 'Navigation has role="navigation"');
+    
+    // Test screen reader announcer
+    const announcer = document.getElementById('sr-announcer');
+    assert(announcer !== null, 'Screen reader announcer exists');
+    assert(announcer && announcer.getAttribute('aria-live') === 'polite', 'Announcer has aria-live');
+    
+    // Test skip link
+    const skipLink = document.querySelector('a[href="#main-content"]');
+    assert(skipLink !== null, 'Skip to content link exists');
+
+    // ========================================================================
     // Test Summary
     // ========================================================================
     console.log('\n' + '='.repeat(50));

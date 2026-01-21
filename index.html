@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Mini SCADA HMI Dashboard - Industrial control system monitoring interface">
     <title>Mini SCADA HMI Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,27 +19,36 @@
     <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <!-- Skip to main content link for keyboard users -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:bg-blue-600 focus:text-white focus:px-4 focus:py-2 focus:rounded">
+        Skip to main content
+    </a>
+    
+    <!-- Screen reader announcer for dynamic updates -->
+    <div id="sr-announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+    
     <div id="app" class="min-h-screen">
         <!-- Navigation -->
-        <nav class="bg-blue-600 dark:bg-blue-800 text-white p-4">
+        <nav class="bg-blue-600 dark:bg-blue-800 text-white p-4" role="navigation" aria-label="Main navigation">
             <div class="container mx-auto flex justify-between items-center">
                 <h1 class="text-xl font-bold">Mini SCADA HMI</h1>
-                <div class="flex space-x-4">
-                    <a href="#/overview" data-route="overview" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors" data-tippy-content="Main dashboard showing all machines, alarms, and key performance metrics at a glance">Overview</a>
-                    <a href="#/runbooks" data-route="runbooks" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors" data-tippy-content="Standard Operating Procedures (SOPs) for responding to alarms and troubleshooting equipment issues">Runbooks</a>
-                    <a href="#/commissioning" data-route="commissioning" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors" data-tippy-content="Factory Acceptance Test (FAT) and Site Acceptance Test (SAT) checklists for equipment validation">Commissioning</a>
-                    <a href="#/help" data-route="help" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors" data-tippy-content="User manual and getting started guide for new operators">Help</a>
-                    <button id="dark-mode-toggle" class="ml-4" data-tippy-content="Toggle dark mode for reduced eye strain during night shifts">🌙</button>
+                <div class="flex space-x-4" role="menubar">
+                    <a href="#/overview" data-route="overview" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Main dashboard showing all machines, alarms, and key performance metrics at a glance">Overview</a>
+                    <a href="#/runbooks" data-route="runbooks" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Standard Operating Procedures (SOPs) for responding to alarms and troubleshooting equipment issues">Runbooks</a>
+                    <a href="#/commissioning" data-route="commissioning" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="Factory Acceptance Test (FAT) and Site Acceptance Test (SAT) checklists for equipment validation">Commissioning</a>
+                    <a href="#/help" data-route="help" role="menuitem" class="px-3 py-1 rounded hover:bg-blue-500 transition-colors focus:outline-none focus:ring-2 focus:ring-white" data-tippy-content="User manual and getting started guide for new operators">Help</a>
+                    <button id="dark-mode-toggle" class="ml-4 focus:outline-none focus:ring-2 focus:ring-white rounded" aria-label="Toggle dark mode" data-tippy-content="Toggle dark mode for reduced eye strain during night shifts">🌙</button>
                 </div>
             </div>
         </nav>
         <!-- Main content -->
-        <main class="container mx-auto p-4">
+        <main id="main-content" class="container mx-auto p-4" role="main" aria-label="Dashboard content">
             <div id="content"></div>
         </main>
     </div>
     <!-- Scripts: Module load order is critical for dependency resolution -->
     <script src="assets/config/constants.js"></script>
+    <script src="assets/security.js"></script>
     <script src="assets/data.js"></script>
     <script src="assets/utils.js"></script>
     <script src="assets/templates.js"></script>
