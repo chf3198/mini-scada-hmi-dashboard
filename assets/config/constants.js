@@ -1,11 +1,16 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
+ * @file Central configuration constants for the Mini SCADA HMI Dashboard.
  * @module config/constants
- * @description Central configuration constants for the Mini SCADA HMI Dashboard.
- * All magic numbers and configuration values are defined here for maintainability.
- * @author Mini SCADA HMI Team
+ * @description All magic numbers and configuration values are defined here for maintainability.
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
  * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 /**

@@ -1,10 +1,16 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
- * @file Self-tests for Mini SCADA HMI Dashboard
- * @description Unit tests for core application functionality.
- *              Run with ?test=1 URL parameter.
+ * @file Self-tests for Mini SCADA HMI Dashboard.
  * @module tests
+ * @description Unit tests for core application functionality. Run with ?test=1 URL parameter.
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
+ * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 // ============================================================================

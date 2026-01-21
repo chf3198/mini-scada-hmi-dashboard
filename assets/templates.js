@@ -1,13 +1,18 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
+ * @file HTML template functions for the Mini SCADA HMI Dashboard.
  * @module templates
- * @description HTML template functions for the Mini SCADA HMI Dashboard.
- * Separates presentation from logic for maintainability.
+ * @description Separates presentation from logic for maintainability.
  * All functions are pure - they return HTML strings based on input data.
  * @requires config/constants
- * @author Mini SCADA HMI Team
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
  * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 // ============================================================================

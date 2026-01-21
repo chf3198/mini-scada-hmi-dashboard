@@ -1,17 +1,22 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
+ * @file Event handlers and user interaction logic for the Mini SCADA HMI Dashboard.
  * @module handlers
- * @description Event handlers and user interaction logic for the Mini SCADA HMI Dashboard.
- * Contains form handlers, UI toggles, and user-triggered actions.
+ * @description Contains form handlers, UI toggles, and user-triggered actions.
  * Includes error handling, input validation, and accessibility support.
  * @requires config/constants
  * @requires data
  * @requires utils
  * @requires templates
  * @requires security
- * @author Mini SCADA HMI Team
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
  * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 // ============================================================================

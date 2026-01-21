@@ -259,11 +259,28 @@ New to SCADA? Here are the key terms:
 
 ---
 
+## � Author
+
+**Curtis Franks**
+
+- GitHub: [@chf3198](https://github.com/chf3198)
+- Email: curtisfranks@gmail.com
+
+---
+
 ## 🙏 Acknowledgments
 
 - Industrial automation professionals who shared SCADA/HMI best practices
 - The open-source community for amazing CDN libraries
 - Factory operators who inspired the "operator-friendly" design philosophy
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+Copyright © 2026 Curtis Franks
 
 ---
 

@@ -1,11 +1,16 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
+ * @file Security utilities for input sanitization and XSS prevention.
  * @module security
- * @description Security utilities for input sanitization and XSS prevention.
- * Provides safe text handling for user-generated content.
- * @author Mini SCADA HMI Team
+ * @description Provides safe text handling for user-generated content.
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
  * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 // ============================================================================

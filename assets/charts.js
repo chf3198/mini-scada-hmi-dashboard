@@ -1,13 +1,18 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
+ * @file Chart.js rendering logic for the Mini SCADA HMI Dashboard.
  * @module charts
- * @description Chart.js rendering logic for the Mini SCADA HMI Dashboard.
- * Handles creation and destruction of overview dashboard charts.
+ * @description Handles creation and destruction of overview dashboard charts.
  * @requires config/constants
  * @requires data
- * @author Mini SCADA HMI Team
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
  * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 // ============================================================================

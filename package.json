@@ -1,0 +1,39 @@
+{
+  "name": "mini-scada-hmi-dashboard",
+  "version": "1.0.0",
+  "description": "A zero-build, browser-ready demo of a SCADA Human-Machine Interface for factory monitoring",
+  "author": {
+    "name": "Curtis Franks",
+    "email": "curtisfranks@gmail.com",
+    "url": "https://github.com/chf3198"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chf3198/mini-scada-hmi-dashboard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chf3198/mini-scada-hmi-dashboard/issues"
+  },
+  "homepage": "https://github.com/chf3198/mini-scada-hmi-dashboard#readme",
+  "keywords": [
+    "scada",
+    "hmi",
+    "dashboard",
+    "industrial",
+    "automation",
+    "monitoring",
+    "demo",
+    "zero-build",
+    "tailwind",
+    "chart.js"
+  ],
+  "private": false,
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "echo \"Open index.html?test=1 in a browser to run tests\""
+  }
+}

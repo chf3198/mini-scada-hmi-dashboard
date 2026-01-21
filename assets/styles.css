@@ -1,6 +1,12 @@
+/* SPDX-License-Identifier: MIT */
+/* Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com> */
+
 /**
  * Custom Styles for Mini SCADA HMI Dashboard
  * Most styling handled by Tailwind CSS, these are enhancements
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @license MIT
+ * @see https://github.com/chf3198/mini-scada-hmi-dashboard
  */
 
 /* ============================================================================

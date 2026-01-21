@@ -1,13 +1,18 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
+ * @file Utility functions for formatting, calculations, simulation, and persistence.
  * @module utils
- * @description Utility functions for formatting, calculations, simulation, and persistence.
- * Contains both pure utility functions and side-effect functions for state management.
+ * @description Contains both pure utility functions and side-effect functions for state management.
  * @requires config/constants
  * @requires data
- * @author Mini SCADA HMI Team
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
  * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 // ============================================================================

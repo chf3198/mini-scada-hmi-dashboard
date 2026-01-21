@@ -1,9 +1,12 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Curtis Franks <curtisfranks@gmail.com>
+
 'use strict';
 
 /**
+ * @file Core application initialization and view rendering for the Mini SCADA HMI Dashboard.
  * @module app
- * @description Core application initialization and view rendering for the Mini SCADA HMI Dashboard.
- * Orchestrates views by delegating to templates.js for HTML generation.
+ * @description Orchestrates views by delegating to templates.js for HTML generation.
  * @requires config/constants
  * @requires data
  * @requires utils
@@ -11,8 +14,10 @@
  * @requires router
  * @requires handlers
  * @requires charts
- * @author Mini SCADA HMI Team
+ * @author Curtis Franks <curtisfranks@gmail.com>
+ * @copyright 2026 Curtis Franks
  * @license MIT
+ * @see {@link https://github.com/chf3198/mini-scada-hmi-dashboard}
  */
 
 // ============================================================================
