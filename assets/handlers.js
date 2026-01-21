@@ -167,12 +167,35 @@ const filterRunbooks = debounce(function() {
 }, 150);
 
 // ============================================================================
-// CHECKLIST HANDLERS
+// CHECKLIST HANDLERS (with Immutable Patterns)
 // ============================================================================
 
 /**
+ * Pure function to toggle a checklist item immutably.
+ * @param {Object} checklist - Current checklist object
+ * @param {string} section - Section name
+ * @param {string} itemName - Item name to toggle
+ * @returns {Object} New checklist object with item toggled
+ * @pure
+ */
+function toggleChecklistItemImmutable(checklist, section, itemName) {
+    if (!checklist[section]) {
+        return checklist;
+    }
+    
+    return {
+        ...checklist,
+        [section]: checklist[section].map(item =>
+            item.item === itemName
+                ? { ...item, checked: !item.checked }
+                : item
+        )
+    };
+}
+
+/**
  * Toggles a checklist item's checked state and persists to localStorage.
- * Includes input validation and error handling.
+ * Uses immutable update pattern internally.
  * @param {string} section - The checklist section name (e.g., 'Safety')
  * @param {string} itemName - The checklist item text to toggle
  * @sideeffect Modifies commissioningChecklist, persists to localStorage
@@ -186,17 +209,25 @@ function toggleChecklist(section, itemName) {
         }
         
         const sanitizedItemName = sanitizeInput(itemName);
-        const checklistItem = commissioningChecklist[section].find(
+        
+        // Get current state before toggle for announcement
+        const currentItem = commissioningChecklist[section].find(
             targetItem => targetItem.item === sanitizedItemName
         );
         
-        if (checklistItem) {
-            checklistItem.checked = !checklistItem.checked;
+        if (currentItem) {
+            // Apply immutable update
+            commissioningChecklist = toggleChecklistItemImmutable(
+                commissioningChecklist,
+                section,
+                sanitizedItemName
+            );
+            
             saveChecklistToLocalStorage();
             
-            // Announce state change to screen readers
-            const state = checklistItem.checked ? 'checked' : 'unchecked';
-            announceToScreenReader(`${sanitizedItemName} ${state}`);
+            // Announce state change to screen readers (new state is opposite of current)
+            const newState = !currentItem.checked ? 'checked' : 'unchecked';
+            announceToScreenReader(`${sanitizedItemName} ${newState}`);
         }
     } catch (error) {
         console.error('Error toggling checklist:', error);

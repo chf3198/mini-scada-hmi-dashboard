@@ -53,6 +53,264 @@ if (window.location.search.includes('test=1')) {
     assert(typeof REQUIRED_CHECKLIST_SECTIONS === 'object', 'REQUIRED_CHECKLIST_SECTIONS exists');
 
     // ========================================================================
+    // Functional Programming Utilities Tests (NEW)
+    // ========================================================================
+    console.log('\n🔧 Testing FP Utilities (fp.js)...');
+    
+    // Test pipe
+    assert(typeof pipe === 'function', 'pipe function exists');
+    const pipedResult = pipe(5, x => x + 1, x => x * 2);
+    assert(pipedResult === 12, 'pipe correctly chains functions left-to-right');
+    
+    const pipedArray = pipe([1, 2, 3], arr => arr.filter(x => x > 1), arr => arr.map(x => x * 2));
+    assert(pipedArray.length === 2, 'pipe works with array transformations');
+    assert(pipedArray[0] === 4 && pipedArray[1] === 6, 'pipe produces correct array results');
+    
+    // Test flow
+    assert(typeof flow === 'function', 'flow function exists');
+    const addOneThenDouble = flow(x => x + 1, x => x * 2);
+    assert(addOneThenDouble(5) === 12, 'flow creates reusable composed function');
+    
+    // Test compose
+    assert(typeof compose === 'function', 'compose function exists');
+    const doubleThenAddOne = compose(x => x + 1, x => x * 2);
+    assert(doubleThenAddOne(5) === 11, 'compose applies functions right-to-left');
+    
+    // Test curry
+    assert(typeof curry === 'function', 'curry function exists');
+    const add3 = (a, b, c) => a + b + c;
+    const curriedAdd = curry(add3);
+    assert(curriedAdd(1)(2)(3) === 6, 'curry allows one arg at a time');
+    assert(curriedAdd(1, 2)(3) === 6, 'curry allows multiple args');
+    assert(curriedAdd(1)(2, 3) === 6, 'curry allows remaining args at once');
+    
+    // Test partial
+    assert(typeof partial === 'function', 'partial function exists');
+    const greet = (greeting, name) => `${greeting}, ${name}!`;
+    const sayHello = partial(greet, 'Hello');
+    assert(sayHello('World') === 'Hello, World!', 'partial presets arguments');
+    
+    // Test immutable helpers
+    assert(typeof freezeShallow === 'function', 'freezeShallow function exists');
+    const frozen = freezeShallow({ a: 1 });
+    assert(Object.isFrozen(frozen), 'freezeShallow returns frozen object');
+    
+    assert(typeof setIn === 'function', 'setIn function exists');
+    const nestedObj = { user: { name: 'Alice', age: 30 } };
+    const updated = setIn(nestedObj, ['user', 'age'], 31);
+    assert(updated.user.age === 31, 'setIn updates nested property');
+    assert(nestedObj.user.age === 30, 'setIn does not mutate original');
+    
+    assert(typeof getIn === 'function', 'getIn function exists');
+    assert(getIn(nestedObj, ['user', 'name']) === 'Alice', 'getIn retrieves nested value');
+    assert(getIn(nestedObj, ['x', 'y'], 'default') === 'default', 'getIn returns default for missing path');
+    
+    // Test curried array utilities
+    assert(typeof map === 'function', 'curried map function exists');
+    const doubled = pipe([1, 2, 3], map(x => x * 2));
+    assert(doubled[0] === 2 && doubled[1] === 4, 'curried map works in pipe');
+    
+    assert(typeof filter === 'function', 'curried filter function exists');
+    const evens = pipe([1, 2, 3, 4], filter(x => x % 2 === 0));
+    assert(evens.length === 2, 'curried filter works in pipe');
+    
+    assert(typeof reduce === 'function', 'curried reduce function exists');
+    const sum = pipe([1, 2, 3], reduce((acc, x) => acc + x, 0));
+    assert(sum === 6, 'curried reduce works in pipe');
+    
+    assert(typeof take === 'function', 'curried take function exists');
+    const first2 = pipe([1, 2, 3, 4, 5], take(2));
+    assert(first2.length === 2 && first2[1] === 2, 'curried take works correctly');
+    
+    // Test predicate utilities
+    assert(typeof propEq === 'function', 'propEq function exists');
+    const isActive = propEq('status', 'active');
+    assert(isActive({ status: 'active' }) === true, 'propEq matches correctly');
+    assert(isActive({ status: 'inactive' }) === false, 'propEq rejects non-match');
+    
+    assert(typeof identity === 'function', 'identity function exists');
+    assert(identity(42) === 42, 'identity returns its argument');
+    
+    assert(typeof always === 'function', 'always function exists');
+    const alwaysZero = always(0);
+    assert(alwaysZero() === 0, 'always returns constant value');
+
+    // ========================================================================
+    // State Management Tests (NEW)
+    // ========================================================================
+    console.log('\n📊 Testing State Management (state.js)...');
+    
+    // Test ActionTypes
+    assert(typeof ActionTypes === 'object', 'ActionTypes constant exists');
+    assert(ActionTypes.ADD_EVENT === 'ADD_EVENT', 'ActionTypes.ADD_EVENT is correct');
+    assert(ActionTypes.TOGGLE_CHECKLIST_ITEM === 'TOGGLE_CHECKLIST_ITEM', 'ActionTypes has checklist action');
+    
+    // Test action creators
+    assert(typeof createAddEventAction === 'function', 'createAddEventAction exists');
+    const eventAction = createAddEventAction(1, 'INFO', 'Test message', 12345);
+    assert(eventAction.type === ActionTypes.ADD_EVENT, 'createAddEventAction returns correct type');
+    assert(eventAction.payload.machineId === 1, 'createAddEventAction includes machineId');
+    assert(eventAction.payload.message === 'Test message', 'createAddEventAction includes message');
+    
+    assert(typeof createToggleChecklistAction === 'function', 'createToggleChecklistAction exists');
+    const toggleAction = createToggleChecklistAction('Safety', 'Test item');
+    assert(toggleAction.type === ActionTypes.TOGGLE_CHECKLIST_ITEM, 'Toggle action has correct type');
+    assert(toggleAction.payload.section === 'Safety', 'Toggle action includes section');
+    
+    // Test pure reducers
+    assert(typeof eventsReducer === 'function', 'eventsReducer exists');
+    const testEvents = [{ id: 1, message: 'Old event', severity: 'INFO', acknowledged: false }];
+    const addAction = createAddEventAction(1, 'ALARM', 'New alarm', Date.now());
+    const newEvents = eventsReducer(testEvents, addAction);
+    assert(newEvents.length === 2, 'eventsReducer adds new event');
+    assert(newEvents[0].message === 'New alarm', 'eventsReducer prepends new event');
+    assert(testEvents.length === 1, 'eventsReducer does not mutate original array');
+    
+    // Test event acknowledgment reducer
+    const ackAction = createAcknowledgeEventAction(1);
+    const ackedEvents = eventsReducer(testEvents, ackAction);
+    assert(ackedEvents[0].acknowledged === true, 'eventsReducer acknowledges event');
+    assert(testEvents[0].acknowledged === false, 'eventsReducer does not mutate original event');
+    
+    // Test checklist reducer
+    assert(typeof checklistReducer === 'function', 'checklistReducer exists');
+    const testChecklist = {
+        Safety: [{ item: 'Test item', checked: false }]
+    };
+    const checklistToggleAction = createToggleChecklistAction('Safety', 'Test item');
+    const newChecklist = checklistReducer(testChecklist, checklistToggleAction);
+    assert(newChecklist.Safety[0].checked === true, 'checklistReducer toggles item');
+    assert(testChecklist.Safety[0].checked === false, 'checklistReducer does not mutate original');
+    
+    // Test pure metric calculators
+    assert(typeof calculateMetrics === 'function', 'calculateMetrics exists');
+    const testMachines = [
+        { id: 1, status: 'RUN' },
+        { id: 2, status: 'DOWN' }
+    ];
+    const testEventsForMetrics = [
+        { timestamp: Date.now(), severity: 'ALARM' }
+    ];
+    const metrics = calculateMetrics(testEventsForMetrics, testMachines, [], Date.now());
+    assert(metrics.machinesDown === 1, 'calculateMetrics counts machines down');
+    assert(metrics.alarmsLast24h === 1, 'calculateMetrics counts recent alarms');
+    
+    // Test selectors
+    assert(typeof selectMachineById === 'function', 'selectMachineById exists');
+    assert(typeof selectEventsByMachine === 'function', 'selectEventsByMachine exists');
+    assert(typeof selectChecklistProgress === 'function', 'selectChecklistProgress exists');
+
+    // ========================================================================
+    // Immutable Utility Tests (NEW)
+    // ========================================================================
+    console.log('\n🔒 Testing Immutable Utilities...');
+    
+    // Test createEvent
+    assert(typeof createEvent === 'function', 'createEvent pure function exists');
+    const newEventObj = createEvent([], 1, 'INFO', 'Test', 12345);
+    assert(newEventObj.id === 1, 'createEvent assigns correct id');
+    assert(newEventObj.acknowledged === false, 'createEvent defaults acknowledged to false');
+    assert(Object.isFrozen(newEventObj), 'createEvent returns frozen object');
+    
+    // Test addEventImmutable
+    assert(typeof addEventImmutable === 'function', 'addEventImmutable exists');
+    const existingEvents = [{ id: 1, message: 'old' }];
+    const addedEvents = addEventImmutable(existingEvents, { id: 2, message: 'new' }, 5);
+    assert(addedEvents.length === 2, 'addEventImmutable adds event');
+    assert(addedEvents[0].id === 2, 'addEventImmutable prepends event');
+    assert(existingEvents.length === 1, 'addEventImmutable does not mutate original');
+    
+    // Test acknowledgeEventImmutable
+    assert(typeof acknowledgeEventImmutable === 'function', 'acknowledgeEventImmutable exists');
+    const eventsToAck = [{ id: 1, acknowledged: false }, { id: 2, acknowledged: false }];
+    const afterAck = acknowledgeEventImmutable(eventsToAck, 1);
+    assert(afterAck[0].acknowledged === true, 'acknowledgeEventImmutable acks correct event');
+    assert(afterAck[1].acknowledged === false, 'acknowledgeEventImmutable leaves other events');
+    assert(eventsToAck[0].acknowledged === false, 'acknowledgeEventImmutable does not mutate');
+    
+    // Test toggleChecklistItemImmutable
+    assert(typeof toggleChecklistItemImmutable === 'function', 'toggleChecklistItemImmutable exists');
+    const checklistToToggle = { Safety: [{ item: 'Guards', checked: false }] };
+    const toggled = toggleChecklistItemImmutable(checklistToToggle, 'Safety', 'Guards');
+    assert(toggled.Safety[0].checked === true, 'toggleChecklistItemImmutable toggles item');
+    assert(checklistToToggle.Safety[0].checked === false, 'toggleChecklistItemImmutable does not mutate');
+    
+    // Test resetChecklistImmutable
+    assert(typeof resetChecklistImmutable === 'function', 'resetChecklistImmutable exists');
+    const checklistToReset = { 
+        Safety: [{ item: 'Test', checked: true }],
+        IO: [{ item: 'Inputs', checked: true }]
+    };
+    const resetResult = resetChecklistImmutable(checklistToReset);
+    assert(resetResult.Safety[0].checked === false, 'resetChecklistImmutable unchecks items');
+    assert(resetResult.IO[0].checked === false, 'resetChecklistImmutable resets all sections');
+    assert(checklistToReset.Safety[0].checked === true, 'resetChecklistImmutable does not mutate');
+    
+    // Test computeMetrics pure function
+    assert(typeof computeMetrics === 'function', 'computeMetrics pure function exists');
+    const pureMetrics = computeMetrics(Date.now());
+    assert(typeof pureMetrics.alarmsLast24h === 'number', 'computeMetrics returns alarmsLast24h');
+    assert(typeof pureMetrics.machinesDown === 'number', 'computeMetrics returns machinesDown');
+    assert(Object.isFrozen(pureMetrics), 'computeMetrics returns frozen object');
+
+    // ========================================================================
+    // Time-Injectable Pure Function Tests (NEW)
+    // ========================================================================
+    console.log('\n⏰ Testing Time-Injectable Pure Functions...');
+    
+    // Test formatAgo with injectable time
+    assert(typeof formatAgo === 'function', 'formatAgo function exists');
+    const pastTime = 1000000;
+    const currentTime = 1005000; // 5 seconds later
+    const agoResult = formatAgo(pastTime, currentTime);
+    assert(agoResult === '5s ago', 'formatAgo with injected time returns correct result');
+    assert(formatAgo(null) === 'Never', 'formatAgo returns Never for null');
+    
+    // Test templateMachineCard with injectable time
+    const testMachineForTemplate = { 
+        id: 1, 
+        name: 'Test Machine', 
+        status: 'RUN', 
+        healthScore: 95, 
+        lastHeartbeat: 1000000 
+    };
+    const cardWithTime = templateMachineCard(testMachineForTemplate, 1005000);
+    assert(cardWithTime.includes('5s ago'), 'templateMachineCard uses injected time');
+    
+    // Test templateMachineHealthCard with injectable time
+    const healthCardWithTime = templateMachineHealthCard(testMachineForTemplate, 1010000);
+    assert(healthCardWithTime.includes('10s ago'), 'templateMachineHealthCard uses injected time');
+    
+    // Test calculateDowntimeToday with injectable time
+    assert(typeof calculateDowntimeToday === 'function', 'calculateDowntimeToday function exists');
+    // Function should accept time parameter
+    const downtimeResult = calculateDowntimeToday(Date.now());
+    assert(typeof downtimeResult === 'number', 'calculateDowntimeToday returns number');
+
+    // ========================================================================
+    // Curried Template Function Tests (NEW)
+    // ========================================================================
+    console.log('\n🎨 Testing Curried Template Functions...');
+    
+    // Test curriedMetricCard
+    assert(typeof curriedMetricCard === 'function', 'curriedMetricCard exists');
+    const redMetric = curriedMetricCard('text-red-600');
+    assert(typeof redMetric === 'function', 'curriedMetricCard returns partially applied function');
+    
+    const redWithTooltip = redMetric('Danger tooltip');
+    assert(typeof redWithTooltip === 'function', 'curriedMetricCard can be partially applied twice');
+    
+    const finalMetricHtml = redWithTooltip('Alarms', 5);
+    assert(finalMetricHtml.includes('text-red-600'), 'curriedMetricCard includes color class');
+    assert(finalMetricHtml.includes('5'), 'curriedMetricCard includes value');
+    
+    // Test pre-configured metric cards
+    assert(typeof dangerMetricCard === 'function', 'dangerMetricCard exists');
+    assert(typeof warningMetricCard === 'function', 'warningMetricCard exists');
+    assert(typeof successMetricCard === 'function', 'successMetricCard exists');
+    assert(typeof infoMetricCard === 'function', 'infoMetricCard exists');
+
+    // ========================================================================
     // Event Generation Tests
     // ========================================================================
     console.log('\n📡 Testing Event Generation...');

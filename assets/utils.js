@@ -32,14 +32,16 @@ function formatTime(timestamp) {
 
 /**
  * Formats a timestamp as a relative "X seconds ago" string.
+ * Time is injectable for true purity and testability.
  * @param {number|null} timestamp - Unix timestamp in milliseconds, or null
+ * @param {number} currentTime - Current timestamp (injectable, defaults to Date.now())
  * @returns {string} Relative time string (e.g., "45s ago") or "Never" if null
  * @example formatAgo(Date.now() - 5000) // => "5s ago"
- * @pure
+ * @pure (when currentTime is provided)
  */
-function formatAgo(timestamp) {
+function formatAgo(timestamp, currentTime = Date.now()) {
     if (!timestamp) return 'Never';
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    const seconds = Math.floor((currentTime - timestamp) / 1000);
     return seconds + 's ago';
 }
 
@@ -71,111 +73,277 @@ function getStatusColor(status) {
 
 /**
  * Calculates total downtime in minutes for the current day.
+ * Uses pure functional pipeline with injected time.
+ * @param {number} currentTime - Current timestamp (injectable for testing)
  * @returns {number} Total downtime minutes since midnight
- * @example calculateDowntimeToday() // => 45.5
+ * @example calculateDowntimeToday(Date.now()) // => 45.5
+ * @pure (when currentTime is provided)
  */
-function calculateDowntimeToday() {
-    const today = new Date();
+function calculateDowntimeToday(currentTime = Date.now()) {
+    const today = new Date(currentTime);
     today.setHours(0, 0, 0, 0);
     const todayStart = today.getTime();
     
-    return downtimeEntries
-        .filter(entry => entry.end >= todayStart)
-        .reduce((sum, entry) => sum + (entry.end - entry.start) / TIME.MS_PER_MINUTE, 0);
+    return pipe(
+        downtimeEntries,
+        filter(entry => entry.end >= todayStart),
+        reduce((sum, entry) => sum + (entry.end - entry.start) / TIME.MS_PER_MINUTE, 0)
+    );
+}
+
+/**
+ * Pure function to calculate metrics from current data.
+ * Does NOT mutate global state.
+ * @param {number} currentTime - Current timestamp
+ * @returns {Object} Calculated metrics object
+ * @pure
+ */
+function computeMetrics(currentTime = Date.now()) {
+    const last24h = currentTime - TIME.MS_PER_DAY;
+    
+    const alarmsCount = pipe(
+        events,
+        filter(event => event.timestamp >= last24h && event.severity === SEVERITY.ALARM),
+        arr => arr.length
+    );
+    
+    const downCount = pipe(
+        machines,
+        filter(machine => machine.status === MACHINE_STATUS.DOWN),
+        arr => arr.length
+    );
+    
+    const downtimeMinutes = calculateDowntimeToday(currentTime);
+    
+    return freezeShallow({
+        alarmsLast24h: alarmsCount,
+        machinesDown: downCount,
+        downtimeMinutesToday: downtimeMinutes
+    });
 }
 
 /**
  * Updates global metrics based on current state.
- * Calculates alarms in last 24h, machines down, and downtime today.
+ * This is a bridge function that applies pure calculations to mutable globals.
  * @sideeffect Modifies global alarmsLast24h, machinesDown, downtimeMinutesToday
+ * @deprecated Use computeMetrics() for pure calculations
  */
 function updateMetrics() {
-    const now = Date.now();
-    const last24h = now - TIME.MS_PER_DAY;
-    
-    alarmsLast24h = events
-        .filter(event => event.timestamp >= last24h && event.severity === SEVERITY.ALARM)
-        .length;
-    
-    machinesDown = machines
-        .filter(machine => machine.status === MACHINE_STATUS.DOWN)
-        .length;
-    
-    downtimeMinutesToday = calculateDowntimeToday();
+    const metrics = computeMetrics(Date.now());
+    alarmsLast24h = metrics.alarmsLast24h;
+    machinesDown = metrics.machinesDown;
+    downtimeMinutesToday = metrics.downtimeMinutesToday;
 }
 
 // ============================================================================
-// EVENT MANAGEMENT FUNCTIONS
+// EVENT MANAGEMENT FUNCTIONS (with Immutable Patterns)
 // ============================================================================
 
 /**
+ * Pure function to create a new event object.
+ * @param {Array} currentEvents - Current events array
+ * @param {number} machineId - ID of the machine generating the event
+ * @param {string} severity - Event severity (INFO, WARN, ALARM)
+ * @param {string} message - Event message/description
+ * @param {number} timestamp - Event timestamp
+ * @returns {Object} New event object
+ * @pure
+ */
+function createEvent(currentEvents, machineId, severity, message, timestamp = Date.now()) {
+    const maxId = currentEvents.length > 0 
+        ? Math.max(...currentEvents.map(e => e.id)) 
+        : 0;
+    
+    return freezeShallow({
+        id: maxId + 1,
+        machineId,
+        timestamp,
+        severity,
+        message,
+        acknowledged: false
+    });
+}
+
+/**
+ * Pure function to add event to events array immutably.
+ * @param {Array} currentEvents - Current events array
+ * @param {Object} newEvent - New event to add
+ * @param {number} maxEvents - Maximum events to keep
+ * @returns {Array} New events array with event prepended
+ * @pure
+ */
+function addEventImmutable(currentEvents, newEvent, maxEvents = SIMULATION.MAX_EVENTS) {
+    return [newEvent, ...currentEvents].slice(0, maxEvents);
+}
+
+/**
  * Generates a new event and adds it to the events array.
+ * Bridge function that applies pure operations to mutable global.
  * @param {number} machineId - ID of the machine generating the event
  * @param {string} severity - Event severity (INFO, WARN, ALARM)
  * @param {string} message - Event message/description
  * @sideeffect Modifies global events array and triggers metrics update
  */
 function generateEvent(machineId, severity, message) {
-    const event = {
-        id: events.length + 1,
-        machineId,
-        timestamp: Date.now(),
-        severity,
-        message,
-        acknowledged: false
-    };
-    events.unshift(event);
-    
-    // Keep only the configured maximum number of events
-    if (events.length > SIMULATION.MAX_EVENTS) {
-        events.pop();
-    }
-    
+    const newEvent = createEvent(events, machineId, severity, message, Date.now());
+    events = addEventImmutable(events, newEvent);
     updateMetrics();
 }
 
 /**
+ * Pure function to acknowledge an event immutably.
+ * @param {Array} currentEvents - Current events array
+ * @param {number} eventId - ID of the event to acknowledge
+ * @returns {Array} New events array with event acknowledged
+ * @pure
+ */
+function acknowledgeEventImmutable(currentEvents, eventId) {
+    return currentEvents.map(event =>
+        event.id === eventId
+            ? { ...event, acknowledged: true }
+            : event
+    );
+}
+
+/**
  * Acknowledges an alarm event by ID.
+ * Bridge function that applies pure operations to mutable global.
  * @param {number} eventId - ID of the event to acknowledge
  * @sideeffect Modifies event's acknowledged status and generates acknowledgment event
  */
 function acknowledgeAlarm(eventId) {
     const event = events.find(evt => evt.id === eventId);
     if (event) {
-        event.acknowledged = true;
+        events = acknowledgeEventImmutable(events, eventId);
         generateEvent(event.machineId, SEVERITY.INFO, `Alarm acknowledged: ${event.message}`);
     }
 }
 
 /**
+ * Pure function to create a downtime entry object.
+ * @param {Array} currentEntries - Current downtime entries
+ * @param {number} machineId - ID of the machine
+ * @param {string} reason - Reason for downtime
+ * @param {string} notes - Additional notes
+ * @param {number} start - Start timestamp
+ * @param {number} end - End timestamp
+ * @returns {Object} New downtime entry object
+ * @pure
+ */
+function createDowntimeEntry(currentEntries, machineId, reason, notes, start, end) {
+    const maxId = currentEntries.length > 0 
+        ? Math.max(...currentEntries.map(d => d.id)) 
+        : 0;
+    
+    return freezeShallow({
+        id: maxId + 1,
+        machineId,
+        start,
+        end,
+        reason,
+        notes
+    });
+}
+
+/**
  * Adds a new downtime entry for a machine.
+ * Bridge function that applies pure operations to mutable global.
  * @param {number} machineId - ID of the machine
  * @param {string} reason - Reason for downtime (Maintenance, Failure, Setup)
  * @param {string} notes - Additional notes about the downtime
- * @param {string} start - Start datetime string
- * @param {string} end - End datetime string
+ * @param {string} startStr - Start datetime string
+ * @param {string} endStr - End datetime string
  * @sideeffect Modifies global downtimeEntries array and triggers metrics update
  */
-function addDowntimeEntry(machineId, reason, notes, start, end) {
-    const entry = {
-        id: downtimeEntries.length + 1,
+function addDowntimeEntry(machineId, reason, notes, startStr, endStr) {
+    const entry = createDowntimeEntry(
+        downtimeEntries,
         machineId,
-        start: new Date(start).getTime(),
-        end: new Date(end).getTime(),
         reason,
-        notes
-    };
-    downtimeEntries.push(entry);
+        notes,
+        new Date(startStr).getTime(),
+        new Date(endStr).getTime()
+    );
+    downtimeEntries = [...downtimeEntries, entry];
     updateMetrics();
 }
 
 // ============================================================================
-// SIMULATION FUNCTIONS
+// SIMULATION FUNCTIONS (with Immutable Patterns)
 // ============================================================================
 
 /**
+ * Pure function to update a machine immutably.
+ * @param {Array} currentMachines - Current machines array
+ * @param {number} machineId - ID of machine to update
+ * @param {Object} updates - Properties to update
+ * @returns {Array} New machines array
+ * @pure
+ */
+function updateMachineImmutable(currentMachines, machineId, updates) {
+    return currentMachines.map(machine =>
+        machine.id === machineId
+            ? { ...machine, ...updates }
+            : machine
+    );
+}
+
+/**
+ * Pure function to simulate one tick for all machines.
+ * Returns new machines array without mutating the original.
+ * @param {Array} currentMachines - Current machines array
+ * @param {number} currentTime - Current timestamp
+ * @returns {{machines: Array, events: Array<Object>}} New machines and generated events
+ * @pure
+ */
+function simulateTick(currentMachines, currentTime) {
+    const generatedEvents = [];
+    
+    const newMachines = currentMachines.map(machine => {
+        // Update heartbeat
+        let updatedMachine = { ...machine, lastHeartbeat: currentTime };
+        
+        // Random status change
+        const randomValue = Math.random();
+        if (randomValue < SIMULATION.STATUS_CHANGE_PROBABILITY) {
+            const statuses = [MACHINE_STATUS.RUNNING, MACHINE_STATUS.IDLE, MACHINE_STATUS.DOWN];
+            const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
+            
+            if (newStatus !== machine.status) {
+                updatedMachine = { ...updatedMachine, status: newStatus };
+                
+                // Create event for status change
+                let severity, message;
+                if (newStatus === MACHINE_STATUS.DOWN) {
+                    severity = SEVERITY.ALARM;
+                    message = `${machine.name} went down`;
+                } else if (newStatus === MACHINE_STATUS.IDLE) {
+                    severity = SEVERITY.WARNING;
+                    message = `${machine.name} idle`;
+                } else {
+                    severity = SEVERITY.INFO;
+                    message = `${machine.name} running`;
+                }
+                generatedEvents.push({ machineId: machine.id, severity, message });
+            }
+        }
+        
+        // Random units per minute
+        const range = SIMULATION.MAX_UNITS_PER_MIN - SIMULATION.MIN_UNITS_PER_MIN;
+        updatedMachine = {
+            ...updatedMachine,
+            unitsPerMin: Math.floor(Math.random() * range) + SIMULATION.MIN_UNITS_PER_MIN
+        };
+        
+        return updatedMachine;
+    });
+    
+    return { machines: newMachines, events: generatedEvents };
+}
+
+/**
  * Starts the simulation mode, generating random machine events.
- * Updates machine statuses and generates events at regular intervals.
+ * Uses immutable patterns internally.
  * @sideeffect Modifies global simulation state and machine data
  */
 function startSimulation() {
@@ -186,35 +354,21 @@ function startSimulation() {
     renderCurrentView();
     
     simulationInterval = setInterval(() => {
-        // Update each machine's data
-        machines.forEach(machine => {
-            machine.lastHeartbeat = Date.now();
-            
-            const randomValue = Math.random();
-            if (randomValue < SIMULATION.STATUS_CHANGE_PROBABILITY) {
-                const statuses = [MACHINE_STATUS.RUNNING, MACHINE_STATUS.IDLE, MACHINE_STATUS.DOWN];
-                const newStatus = statuses[Math.floor(Math.random() * statuses.length)];
-                
-                if (newStatus !== machine.status) {
-                    machine.status = newStatus;
-                    
-                    // Generate appropriate event for status change
-                    if (newStatus === MACHINE_STATUS.DOWN) {
-                        generateEvent(machine.id, SEVERITY.ALARM, `${machine.name} went down`);
-                    } else if (newStatus === MACHINE_STATUS.IDLE) {
-                        generateEvent(machine.id, SEVERITY.WARNING, `${machine.name} idle`);
-                    } else {
-                        generateEvent(machine.id, SEVERITY.INFO, `${machine.name} running`);
-                    }
-                }
-            }
-            
-            // Simulate random units per minute
-            const range = SIMULATION.MAX_UNITS_PER_MIN - SIMULATION.MIN_UNITS_PER_MIN;
-            machine.unitsPerMin = Math.floor(Math.random() * range) + SIMULATION.MIN_UNITS_PER_MIN;
+        const currentTime = Date.now();
+        
+        // Get immutable simulation result
+        const tickResult = simulateTick(machines, currentTime);
+        
+        // Apply immutable result to global (bridge pattern)
+        machines.length = 0;
+        machines.push(...tickResult.machines);
+        
+        // Generate events from simulation
+        tickResult.events.forEach(evt => {
+            generateEvent(evt.machineId, evt.severity, evt.message);
         });
         
-        lastSimulated = Date.now();
+        lastSimulated = currentTime;
         
         // Only update the ticker element, not the full view
         const ticker = document.getElementById('sim-ticker');
@@ -420,7 +574,24 @@ function importChecklist(event) {
 }
 
 /**
+ * Pure function to reset all checklist items to unchecked.
+ * @param {Object} checklist - Current checklist object
+ * @returns {Object} New checklist with all items unchecked
+ * @pure
+ */
+function resetChecklistImmutable(checklist) {
+    return Object.keys(checklist).reduce((acc, sectionName) => ({
+        ...acc,
+        [sectionName]: checklist[sectionName].map(item => ({
+            ...item,
+            checked: false
+        }))
+    }), {});
+}
+
+/**
  * Resets all checklist items to unchecked state.
+ * Uses immutable update pattern internally.
  * Requires user confirmation before proceeding.
  * @sideeffect Modifies global commissioningChecklist and updates UI
  */
@@ -429,11 +600,8 @@ function resetChecklist() {
         return;
     }
     
-    for (const sectionName of Object.keys(commissioningChecklist)) {
-        commissioningChecklist[sectionName].forEach(checklistItem => {
-            checklistItem.checked = false;
-        });
-    }
+    // Apply immutable reset
+    commissioningChecklist = resetChecklistImmutable(commissioningChecklist);
     
     saveChecklistToLocalStorage();
     renderCurrentView();

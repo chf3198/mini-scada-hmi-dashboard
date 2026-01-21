@@ -21,17 +21,19 @@
 
 /**
  * Renders a machine card for the overview dashboard.
+ * Time is injectable for true purity and testability.
  * @param {Object} machine - The machine object
  * @param {number} machine.id - Machine ID
  * @param {string} machine.name - Machine display name
  * @param {string} machine.status - Current status (RUN/IDLE/DOWN)
  * @param {number} machine.healthScore - Health percentage 0-100
  * @param {number} machine.lastHeartbeat - Last heartbeat timestamp
+ * @param {number} currentTime - Current timestamp (injectable, defaults to Date.now())
  * @returns {string} HTML string for machine card
- * @pure
+ * @pure (when currentTime is provided)
  */
-function templateMachineCard(machine) {
-    const secondsSinceHeartbeat = Math.floor((Date.now() - machine.lastHeartbeat) / 1000);
+function templateMachineCard(machine, currentTime = Date.now()) {
+    const secondsSinceHeartbeat = Math.floor((currentTime - machine.lastHeartbeat) / 1000);
     return `
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow" data-tippy-content="Equipment asset card showing real-time status from PLC/RTU data">
             <h3 class="text-lg font-bold">${machine.name}</h3>
@@ -196,7 +198,7 @@ function templateCommissioningSection(section, sectionItems) {
 }
 
 // ============================================================================
-// METRIC CARDS
+// METRIC CARDS (with Curried Variants)
 // ============================================================================
 
 /**
@@ -216,6 +218,44 @@ function templateMetricCard(title, value, colorClass, tooltip) {
         </div>
     `;
 }
+
+/**
+ * Curried metric card factory - pre-configure color and tooltip.
+ * Enables creating styled metric card generators.
+ * @param {string} colorClass - Tailwind color class
+ * @returns {Function} Function taking (tooltip) => (title, value) => HTML
+ * @example
+ * const dangerMetric = curriedMetricCard('text-red-600')('Critical metric');
+ * dangerMetric('Alarms', 5); // => metric card HTML
+ * @pure
+ */
+const curriedMetricCard = curry((colorClass, tooltip, title, value) =>
+    templateMetricCard(title, value, colorClass, tooltip)
+);
+
+/**
+ * Pre-configured danger (red) metric card generator.
+ * @type {Function}
+ */
+const dangerMetricCard = curriedMetricCard('text-red-600');
+
+/**
+ * Pre-configured warning (yellow) metric card generator.
+ * @type {Function}
+ */
+const warningMetricCard = curriedMetricCard('text-yellow-600');
+
+/**
+ * Pre-configured success (green) metric card generator.
+ * @type {Function}
+ */
+const successMetricCard = curriedMetricCard('text-green-600');
+
+/**
+ * Pre-configured info (blue) metric card generator.
+ * @type {Function}
+ */
+const infoMetricCard = curriedMetricCard('text-blue-600');
 
 // ============================================================================
 // HELP PAGE SECTIONS
@@ -431,12 +471,14 @@ function templateSimulationControls(isRunning, lastSimulatedTime) {
 
 /**
  * Renders the machine health card.
+ * Time is injectable for true purity and testability.
  * @param {Object} machine - The machine object
+ * @param {number} currentTime - Current timestamp (injectable, defaults to Date.now())
  * @returns {string} HTML string for health card
- * @pure
+ * @pure (when currentTime is provided)
  */
-function templateMachineHealthCard(machine) {
-    const secondsSinceHeartbeat = Math.floor((Date.now() - machine.lastHeartbeat) / 1000);
+function templateMachineHealthCard(machine, currentTime = Date.now()) {
+    const secondsSinceHeartbeat = Math.floor((currentTime - machine.lastHeartbeat) / 1000);
     
     return `
         <div class="bg-white dark:bg-gray-800 p-4 rounded shadow" data-tippy-content="Real-time health metrics from PLC/controller - used for predictive maintenance and performance monitoring">
