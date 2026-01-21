@@ -12,15 +12,31 @@
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-features">Features</a> •
   <a href="#-screenshots">Screenshots</a> •
-  <a href="#-contributing">Contributing</a>
+  <a href="#%EF%B8%8F-technology-stack">Tech Stack</a> •
+  <a href="#-contributing">Contributing</a> •
+  <a href="#-glossary">Glossary</a>
 </p>
 
 <p align="center">
+  <!-- Build & Runtime -->
   <img src="https://img.shields.io/badge/build-no_build_required-brightgreen?style=flat-square" alt="No Build Required">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License">
-  <img src="https://img.shields.io/badge/dependencies-CDN_only-orange?style=flat-square" alt="CDN Dependencies">
   <img src="https://img.shields.io/badge/works-offline-purple?style=flat-square" alt="Works Offline">
   <img src="https://img.shields.io/badge/file://-protocol_ready-teal?style=flat-square" alt="File Protocol Ready">
+  <br>
+  <!-- Tech -->
+  <img src="https://img.shields.io/badge/dependencies-CDN_only-orange?style=flat-square" alt="CDN Dependencies">
+  <img src="https://img.shields.io/badge/JavaScript-ES6+-yellow?style=flat-square&logo=javascript&logoColor=white" alt="JavaScript ES6+">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  <br>
+  <!-- License & Size -->
+  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="MIT License">
+  <img src="https://img.shields.io/badge/codebase-~800_lines-informational?style=flat-square" alt="~800 Lines">
+</p>
+
+---
+
+<p align="center">
+  <img src="docs/screenshots/overview.png" alt="Overview Dashboard" width="800">
 </p>
 
 ---
@@ -136,11 +152,39 @@ start index.html       # Windows
 
 ## 🖥️ Screenshots
 
-| Overview Dashboard | Machine Detail |
-|:------------------:|:--------------:|
-| ![Overview](docs/overview.png) | ![Machine Detail](docs/machine.png) |
-
-> 📸 **Note:** These are placeholder images. Replace with actual screenshots after running the app!
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>📊 Overview Dashboard</strong><br>
+      <img src="docs/screenshots/overview.png" alt="Overview Dashboard" width="100%">
+      <br><sub>Real-time machine status, KPIs, severity charts, and event log</sub>
+    </td>
+    <td align="center" width="50%">
+      <strong>🔧 Machine Detail</strong><br>
+      <img src="docs/screenshots/machine-detail.png" alt="Machine Detail" width="100%">
+      <br><sub>Drill-down view with metrics, alerts, and quick actions</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>📋 Runbooks (SOPs)</strong><br>
+      <img src="docs/screenshots/runbooks.png" alt="Runbooks" width="100%">
+      <br><sub>Searchable troubleshooting guides with step-by-step procedures</sub>
+    </td>
+    <td align="center" width="50%">
+      <strong>✅ Commissioning Checklists</strong><br>
+      <img src="docs/screenshots/commissioning.png" alt="Commissioning" width="100%">
+      <br><sub>FAT/SAT validation with progress tracking and persistence</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <strong>❓ Help & User Manual</strong><br>
+      <img src="docs/screenshots/help.png" alt="Help Page" width="50%">
+      <br><sub>Built-in documentation with SCADA terminology and app guidance</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -276,15 +320,11 @@ New to SCADA? Here are the key terms:
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-Copyright © 2026 Curtis Franks
-
----
-
 <p align="center">
   <strong>⭐ Found this useful? Give it a star!</strong><br>
   <sub>Built with ❤️ for the industrial automation community</sub>
+</p>
+
+<p align="center">
+  <a href="#-mini-scada-hmi-dashboard">⬆️ Back to top</a>
 </p>
