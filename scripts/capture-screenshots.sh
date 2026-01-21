@@ -68,6 +68,14 @@ for name in "${!VIEWS[@]}"; do
     
     echo "   → $name ($url)"
     
+    # Use virtual-time-budget to allow animations to complete
+    # Overview needs extra time for Chart.js pie chart animation (~1500ms)
+    if [[ "$name" == "overview" ]]; then
+        TIME_BUDGET=3000
+    else
+        TIME_BUDGET=1500
+    fi
+    
     $CHROME \
         --headless \
         --no-sandbox \
@@ -75,6 +83,7 @@ for name in "${!VIEWS[@]}"; do
         --screenshot="$output" \
         --window-size="$WINDOW_SIZE" \
         --hide-scrollbars \
+        --virtual-time-budget="$TIME_BUDGET" \
         "$url" 2>/dev/null
 done
 
