@@ -110,7 +110,7 @@ function templateRunbookCard(runbook) {
         .join('');
     
     return `
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-3 overflow-hidden" data-runbook="${runbook.code}" data-tippy-content="Standard Operating Procedure for handling specific alarm or fault conditions">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-3 overflow-hidden" data-runbook="${runbook.code}" data-tippy-content="Standard Operating Procedure for handling specific alarm or fault conditions">
             <div class="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" onclick="showRunbook('${runbook.code}')">
                 <div>
                     <span class="inline-block px-2 py-1 text-xs font-mono font-bold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded mr-2">${runbook.code}</span>
@@ -527,7 +527,7 @@ function templateHelpPage() {
             <h2 class="text-3xl font-bold mb-4">📖 User Manual</h2>
             <p class="text-gray-600 dark:text-gray-400 mb-6">Welcome to the Mini SCADA HMI Dashboard! Click any section below to learn more.</p>
             ${templateHelpActions()}
-            <div class="space-y-0">
+            <div class="space-y-3">
                 ${sectionsHtml}
             </div>
         </div>
