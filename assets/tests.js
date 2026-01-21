@@ -228,6 +228,38 @@ if (window.location.search.includes('test=1')) {
     assert(skipLink !== null, 'Skip to content link exists');
 
     // ========================================================================
+    // Dark Mode E2E Tests
+    // ========================================================================
+    console.log('\n🌙 Testing Dark Mode Toggle...');
+    
+    // Test dark mode toggle button exists
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    assert(darkModeToggle !== null, 'Dark mode toggle button exists');
+    
+    // Test Tailwind dark mode configuration
+    assert(typeof tailwind !== 'undefined', 'Tailwind config object exists');
+    assert(tailwind.config && tailwind.config.darkMode === 'class', 'Tailwind darkMode is set to "class"');
+    
+    // Test dark mode toggle functionality
+    const htmlElement = document.documentElement;
+    const initialDarkState = htmlElement.classList.contains('dark');
+    
+    // Simulate click
+    darkModeToggle.click();
+    const afterFirstClick = htmlElement.classList.contains('dark');
+    assert(afterFirstClick !== initialDarkState, 'Dark mode class toggles on click');
+    
+    // Click again to restore
+    darkModeToggle.click();
+    const afterSecondClick = htmlElement.classList.contains('dark');
+    assert(afterSecondClick === initialDarkState, 'Dark mode class toggles back on second click');
+    
+    // Test that body has dark mode classes defined
+    const bodyClasses = document.body.className;
+    assert(bodyClasses.includes('dark:bg-gray-900'), 'Body has dark mode background class');
+    assert(bodyClasses.includes('dark:text-gray-100'), 'Body has dark mode text class');
+
+    // ========================================================================
     // Test Summary
     // ========================================================================
     console.log('\n' + '='.repeat(50));
