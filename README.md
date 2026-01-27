@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="Mini SCADA HMI Dashboard" width="600">
+  <img src="docs/banner.png" alt="Mini SCADA HMI Dashboard" width="600">
 </p>
 
 <h1 align="center">🏭 Mini SCADA HMI Dashboard</h1>
