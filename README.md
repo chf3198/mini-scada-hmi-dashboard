@@ -1,35 +1,46 @@
 # Mini SCADA HMI Dashboard
 
-[![No Build Required](https://img.shields.io/badge/build-no_build_required-brightgreen?style=flat-square)](https://github.com/chf3198/mini-scada-hmi-dashboard)
-[![Works Offline](https://img.shields.io/badge/works-offline-purple?style=flat-square)](https://github.com/chf3198/mini-scada-hmi-dashboard)
-[![License: PolyForm NC](https://img.shields.io/badge/License-PolyForm%20NC%201.0-blue?style=flat-square)](LICENSE)
-[![JavaScript ES6+](https://img.shields.io/badge/JavaScript-ES6+-yellow?style=flat-square&logo=javascript&logoColor=white)](https://github.com/chf3198/mini-scada-hmi-dashboard)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white)](https://github.com/chf3198/mini-scada-hmi-dashboard)
-[![~800 Lines](https://img.shields.io/badge/codebase-~800_lines-informational?style=flat-square)](https://github.com/chf3198/mini-scada-hmi-dashboard)
+<p align="center">
+  <img src="docs/banner.png" alt="Mini SCADA HMI Dashboard" width="600">
+</p>
+
+<h1 align="center">🏭 Mini SCADA HMI Dashboard</h1>
+
+<p align="center">
+  <strong>A zero-build, browser-ready demo of a SCADA Human-Machine Interface for factory monitoring</strong>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#technology-stack">Tech Stack</a> ·
+  <a href="#glossary">Glossary</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/build-no_build_required-brightgreen?style=flat-square" alt="No Build Required">
+  <img src="https://img.shields.io/badge/works-offline-purple?style=flat-square" alt="Works Offline">
+  <img src="https://img.shields.io/badge/file://-protocol_ready-teal?style=flat-square" alt="File Protocol Ready">
+  <br>
+  <img src="https://img.shields.io/badge/JavaScript-ES6+-yellow?style=flat-square&logo=javascript&logoColor=white" alt="JavaScript ES6+">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.x-38B2AC?style=flat-square&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/License-PolyForm%20NC%201.0-blue?style=flat-square" alt="PolyForm Noncommercial">
+  <img src="https://img.shields.io/badge/codebase-~800_lines-informational?style=flat-square" alt="~800 Lines">
+</p>
+
+---
 
 **Mini SCADA HMI Dashboard** is a zero-build, browser-ready simulation of an industrial Human-Machine Interface (HMI) for factory floor monitoring. It demonstrates SCADA concepts — alarm management, runbooks (SOPs), commissioning checklists (FAT/SAT), and real-time machine status — in a safe, offline-capable sandbox. Built for students learning industrial automation, developers exploring HMI/SCADA UI patterns, and trainers who need a demo environment without enterprise SCADA software. Runs directly from `index.html` with no server, no npm, and no bundler — all dependencies load via CDN.
 
-[Quick Start](#quick-start) · [Features](#features) · [Screenshots](#screenshots) · [Tech Stack](#technology-stack) · [Glossary](#glossary) · [Contributing](CONTRIBUTING.md)
+> **SCADA** = Supervisory Control and Data Acquisition · **HMI** = Human-Machine Interface
 
 ---
 
-![Overview Dashboard](docs/screenshots/overview.png)
-
----
-
-## What Is This?
-
-Mini SCADA HMI Dashboard is a **learning-friendly demonstration** of how industrial monitoring systems work. Designed for:
-
-- **Students** learning about industrial automation and SCADA systems
-- **Developers** exploring HMI/SCADA UI patterns without enterprise software
-- **Engineers** prototyping dashboard layouts before committing to expensive tools
-- **Trainers** demonstrating operator interfaces in a safe sandbox
-
-This is a **simulated demo** — no real industrial equipment is controlled or harmed.
-
-> **SCADA** = Supervisory Control and Data Acquisition
-> **HMI** = Human-Machine Interface
+<p align="center">
+  <img src="docs/screenshots/overview.png" alt="Overview Dashboard" width="800">
+</p>
 
 ---
 
@@ -41,7 +52,7 @@ Getting started takes less than 30 seconds.
 
 1. Click the green **"Code"** button → **"Download ZIP"**
 2. Unzip anywhere on your computer
-3. Double-click `index.html` — that's it
+3. Double-click `index.html` — that's it! 🎉
 
 **Option 2: Clone with Git**
 
@@ -53,44 +64,94 @@ xdg-open index.html    # Linux
 start index.html       # Windows
 ```
 
-Works via `file://` protocol — no web server required.
+> 💡 Works via `file://` protocol — no web server required!
 
 ---
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Real-Time Dashboard** | Live machine status cards with health scores. Color-coded severity (🔴 Critical → 🟢 OK). Animated charts for downtime and events. Automatic refresh during simulation. |
-| **Alarm Management** | Severity-based event logging. One-click acknowledgment. Timestamp tracking with relative time display. Filter events by machine. |
-| **Runbooks (SOPs)** | Searchable troubleshooting guides. Accordion-style expandable sections. Step-by-step procedures for common issues. Ready for custom procedures. |
-| **Commissioning Checklists** | FAT/SAT-style validation checklists. Progress bars per section and overall. LocalStorage persistence (survives page refresh). JSON export/import for sharing. |
-| **Simulation Mode** | Start/stop realistic event generation. Random alarm triggers and machine status changes. Visual indicators show when simulation is active. |
-| **Operator-Friendly UI** | Dark mode for night shifts. Responsive design for tablets. Tooltips explain SCADA terminology. Built-in Help/User Manual page. |
+<table>
+<tr>
+<td width="50%">
+
+### 📊 Real-Time Dashboard
+Live machine status cards with health scores. Color-coded severity indicators (🔴 Critical → 🟢 OK). Animated charts for downtime and events. Automatic refresh during simulation.
+
+</td>
+<td width="50%">
+
+### 🔔 Alarm Management
+Severity-based event logging with one-click acknowledgment. Timestamp tracking with relative time display. Filter events by machine.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 📋 Runbooks (SOPs)
+Searchable troubleshooting guides with accordion-style expandable sections. Step-by-step procedures for common issues. Ready for your custom procedures.
+
+</td>
+<td width="50%">
+
+### ✅ Commissioning Checklists
+FAT/SAT-style validation checklists with progress bars. LocalStorage persistence (survives page refresh). JSON export/import for sharing.
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🎮 Simulation Mode
+Start/stop realistic event generation with random alarm triggers and machine status changes. Perfect for demos and training.
+
+</td>
+<td width="50%">
+
+### 🌙 Operator-Friendly UI
+Dark mode for night shifts. Responsive design for tablets. Tooltips explain SCADA terminology. Built-in Help/User Manual page.
+
+</td>
+</tr>
+</table>
 
 ---
 
 ## Screenshots
 
-**Overview Dashboard** — Real-time machine status, KPIs, severity charts, and event log
-
-![Overview Dashboard](docs/screenshots/overview.png)
-
-**Machine Detail** — Drill-down view with metrics, alerts, and quick actions
-
-![Machine Detail](docs/screenshots/machine-detail.png)
-
-**Runbooks (SOPs)** — Searchable troubleshooting guides with step-by-step procedures
-
-![Runbooks](docs/screenshots/runbooks.png)
-
-**Commissioning Checklists** — FAT/SAT validation with progress tracking and persistence
-
-![Commissioning](docs/screenshots/commissioning.png)
-
-**Help and User Manual** — Built-in documentation with SCADA terminology and app guidance
-
-![Help Page](docs/screenshots/help.png)
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <strong>📊 Overview Dashboard</strong><br>
+      <img src="docs/screenshots/overview.png" alt="Overview Dashboard" width="100%">
+      <br><sub>Real-time machine status, KPIs, severity charts, and event log</sub>
+    </td>
+    <td align="center" width="50%">
+      <strong>🔧 Machine Detail</strong><br>
+      <img src="docs/screenshots/machine-detail.png" alt="Machine Detail" width="100%">
+      <br><sub>Drill-down view with metrics, alerts, and quick actions</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <strong>📋 Runbooks (SOPs)</strong><br>
+      <img src="docs/screenshots/runbooks.png" alt="Runbooks" width="100%">
+      <br><sub>Searchable troubleshooting guides with step-by-step procedures</sub>
+    </td>
+    <td align="center" width="50%">
+      <strong>✅ Commissioning Checklists</strong><br>
+      <img src="docs/screenshots/commissioning.png" alt="Commissioning" width="100%">
+      <br><sub>FAT/SAT validation with progress tracking and persistence</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <strong>❓ Help & User Manual</strong><br>
+      <img src="docs/screenshots/help.png" alt="Help Page" width="50%">
+      <br><sub>Built-in documentation with SCADA terminology and app guidance</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -132,13 +193,11 @@ All dependencies load via CDN — no npm, no webpack, no bundlers.
 
 ## Running Tests
 
-The project includes lightweight self-tests. Open in your browser with the test flag:
-
 ```
 index.html?test=1
 ```
 
-Check the browser console for results. All tests should pass.
+Open in your browser with the test flag above and check the console. All tests should pass.
 
 ---
 
@@ -172,14 +231,7 @@ This project is educational only. For real industrial deployments, you would nee
 
 ## Contributing
 
-Contributions are welcome:
-
-- Bug reports
-- Feature suggestions
-- Documentation improvements
-- UI/UX enhancements
-
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.
+Contributions are welcome — bug reports, feature suggestions, documentation improvements, and UI/UX enhancements. Read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a pull request.
 
 ---
 
@@ -206,4 +258,7 @@ New to SCADA? Here are the key terms:
 
 ---
 
-*Built with ❤️ for the industrial automation community*
+<p align="center">
+  <strong>⭐ Found this useful? Give it a star!</strong><br>
+  <sub>Built with ❤️ for the industrial automation community</sub>
+</p>
