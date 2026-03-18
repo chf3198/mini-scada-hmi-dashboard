@@ -1,0 +1,126 @@
+name: PR Governance
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+      - labeled
+      - unlabeled
+      - milestoned
+      - demilestoned
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-governance-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    name: Enforce PR governance standards
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate milestone, labels, and issue linkage
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import sys
+
+          event_path = os.environ.get('GITHUB_EVENT_PATH')
+          if not event_path:
+              print('GITHUB_EVENT_PATH is not set')
+              sys.exit(1)
+
+          with open(event_path, 'r', encoding='utf-8') as f:
+              event = json.load(f)
+
+          pr = event.get('pull_request') or {}
+          labels = {label.get('name', '') for label in (pr.get('labels') or [])}
+          milestone = pr.get('milestone')
+          body = pr.get('body') or ''
+
+          type_labels = {
+              'type: epic',
+              'type: research',
+              'type: task',
+              'type: bug-fix',
+          }
+          priority_labels = {
+              'priority: critical',
+              'priority: high',
+              'priority: medium',
+              'priority: low',
+          }
+          domain_labels = {
+              'hmi',
+              'protocol',
+              'frontend',
+              'backend',
+              'testing',
+              'documentation',
+              'devops',
+              'dashboard',
+          }
+
+          errors = []
+
+          if not milestone:
+              errors.append('Milestone is required on every PR.')
+
+          selected_type_labels = labels & type_labels
+          if len(selected_type_labels) != 1:
+              errors.append(
+                  'Exactly one taxonomy label is required: '
+                  'type: epic|research|task|bug-fix.'
+              )
+
+          selected_priority_labels = labels & priority_labels
+          if len(selected_priority_labels) != 1:
+              errors.append(
+                  'Exactly one priority label is required: '
+                  'priority: critical|high|medium|low.'
+              )
+
+          if not (labels & domain_labels):
+              errors.append(
+                  'At least one domain label is required: '
+                  'hmi|protocol|frontend|backend|testing|documentation|devops|dashboard.'
+              )
+
+          linkage_re = re.compile(
+              r'\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#\d+\b',
+              re.IGNORECASE,
+          )
+          if not linkage_re.search(body):
+              errors.append('PR body must include issue linkage, for example: Closes #123.')
+
+          summary_path = os.environ.get('GITHUB_STEP_SUMMARY')
+          if errors:
+              print('PR governance check failed:')
+              for error in errors:
+                  print(f'- {error}')
+
+              if summary_path:
+                  with open(summary_path, 'a', encoding='utf-8') as s:
+                      s.write('## PR Governance ❌\\n\\n')
+                      for error in errors:
+                          s.write(f'- {error}\\n')
+
+              sys.exit(1)
+
+          print('PR governance check passed.')
+          if summary_path:
+              with open(summary_path, 'a', encoding='utf-8') as s:
+                  s.write('## PR Governance ✅\\n\\n')
+                  s.write('- Milestone present\\n')
+                  s.write('- Required labels present\\n')
+                  s.write('- Issue linkage found in PR body\\n')
+          PY

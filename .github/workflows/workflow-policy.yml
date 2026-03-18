@@ -1,0 +1,87 @@
+name: Workflow Policy
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-policy:
+    name: Enforce workflow security policy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Validate workflow policy
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          workflow_dir = Path('.github/workflows')
+          workflow_files = sorted(
+              [
+                  p
+                  for p in workflow_dir.iterdir()
+                  if p.is_file() and p.suffix in {'.yml', '.yaml'}
+              ]
+          )
+
+          uses_re = re.compile(r'^\s*-?\s*uses:\s*([^\s#]+)')
+          full_sha_re = re.compile(r'^[0-9a-f]{40}$')
+          pull_request_target_re = re.compile(r'^\s*pull_request_target\s*:\s*$', re.MULTILINE)
+          top_permissions_re = re.compile(r'^permissions\s*:\s*$', re.MULTILINE)
+
+          errors = []
+
+          for wf in workflow_files:
+              text = wf.read_text(encoding='utf-8')
+              rel = wf.as_posix()
+
+              if not top_permissions_re.search(text):
+                  errors.append(
+                      f"{rel}: missing top-level permissions block (least-privilege baseline)."
+                  )
+
+              if pull_request_target_re.search(text):
+                  errors.append(
+                      f"{rel}: pull_request_target is disallowed by policy (use pull_request unless explicitly approved)."
+                  )
+
+              for i, line in enumerate(text.splitlines(), start=1):
+                  match = uses_re.match(line)
+                  if not match:
+                      continue
+
+                  target = match.group(1)
+
+                  if target.startswith('./') or target.startswith('docker://'):
+                      continue
+
+                  if '/.github/workflows/' in target:
+                      # Reusable workflow reference. Must still be pinned if external.
+                      pass
+
+                  if '@' not in target:
+                      errors.append(f"{rel}:{i}: uses target missing @ref -> {target}")
+                      continue
+
+                  ref = target.rsplit('@', 1)[1]
+                  if not full_sha_re.fullmatch(ref):
+                      errors.append(
+                          f"{rel}:{i}: third-party use must be pinned to full 40-char commit SHA -> {target}"
+                      )
+
+          if errors:
+              print('Workflow policy check failed:')
+              for err in errors:
+                  print(f'- {err}')
+              sys.exit(1)
+
+          print(f'Workflow policy check passed for {len(workflow_files)} workflow file(s).')
+          PY
