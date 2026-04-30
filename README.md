@@ -1,7 +1,7 @@
 # Mini SCADA HMI Dashboard
 
 <p align="center">
-  <img src="docs/banner.png" alt="Mini SCADA HMI Dashboard" width="600">
+  <img src=".github/assets/mini-scada-hmi-banner.png" alt="Mini SCADA HMI Dashboard" width="600">
 </p>
 
 <h1 align="center">🏭 Mini SCADA HMI Dashboard</h1>
