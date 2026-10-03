@@ -95,13 +95,14 @@ jobs:
               }
 
               const marker = '<!-- issues-governance-comment -->';
-              const bodyText = `${marker}
-❌ This issue is missing required governance fields:
-
-${violations.map(v => `- [ ] ${v}`).join('
-')}
-
-Please update the issue. This label will auto-clear when checks pass.`;
+              const bodyText = [
+                marker,
+                '❌ This issue is missing required governance fields:',
+                '',
+                ...violations.map(v => `- [ ] ${v}`),
+                '',
+                'Please update the issue. This label will auto-clear when checks pass.'
+              ].join('\n');
 
               // Update prior bot comment if present; else create one
               const { data: comments } = await github.rest.issues.listComments({
